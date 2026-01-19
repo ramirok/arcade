@@ -69,6 +69,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           reenter: true,
           onEnter: (path: typeof this.path) => {
             this.path = path
+            this.attackTarget = null
           },
           onUpdate: () => {
             const nextPoint = getPixelPosition(this.path[0][0], this.path[0][1])
