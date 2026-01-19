@@ -85,6 +85,9 @@ export class MainGame extends Phaser.Scene {
           const playerCell = getCellFromPixel(this.player.x, this.player.y)
           const targetCell = getCellFromPixel(pointerEvent.worldX, pointerEvent.worldY)
           const path = finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, grid.clone());
+          if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
+            path.shift();
+          }
           const smoothPath = PF.Util.smoothenPath(grid, path);
           this.player.stateMachine.set('move', smoothPath)
         } else if (currentlyOver[0] instanceof Enemy) {
