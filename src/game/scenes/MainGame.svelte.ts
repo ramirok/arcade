@@ -121,6 +121,15 @@ export class MainGame extends Phaser.Scene {
       const enemy = objB as Enemy
       this.#overlapRepel(player, enemy)
     })
+
+    this.physics.add.overlap(this.bullets, this.enemies, (bulletObj, enemyObj) => {
+      const bullet = bulletObj as Bullet;
+      const enemy = enemyObj as Enemy;
+      if (bullet.active && enemy.active) {
+        enemy.takeDamage(bullet.damage);
+        bullet.disable();
+      }
+    })
   }
 
   update() {

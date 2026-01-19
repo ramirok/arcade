@@ -21,6 +21,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   #attackBackswingTimer = 500
   #movementSpeed = 100
   #chaseRange = 400
+  #maxHealth = 3
+  #health = 3
+  #damage = 1
 
   constructor(scene: MainGame, x: number, y: number, texture: string) {
     super(scene, x, y, texture);
@@ -133,7 +136,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
           // TODO: to be implemented
         },
         dead: {
-          // TODO: to be implemented
+          onEnter: () => {
+            this.body.setEnable(false);
+            this.scene.tweens.add({
+              targets: this,
+              alpha: 0,
+              duration: 300,
+              onComplete: () => {
+                this.disable();
+              }
+            });
+          }
         }
       }
     })
@@ -148,13 +161,28 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   disable() {
     this.setActive(false);
     this.setVisible(false)
-    this.body.setEnable(false)
   }
 
   enable() {
     this.setActive(true);
     this.setVisible(true)
     this.body.setEnable(true)
+    this.#health = this.#maxHealth
+    this.stateMachine.set('idle')
+  }
+
+  takeDamage(amount: number) {
+    this.#health -= amount;
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0.3,
+      duration: 100,
+      yoyo: true,
+      repeat: 1
+    });
+    if (this.#health <= 0) {
+      this.stateMachine.set('dead');
+    }
   }
 }
 
