@@ -19,6 +19,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   #attackBackswingTimer = 500
   #recalculateAttackMoveTimeInitial = 200
   #recalculateAttackMoveTimer = 0
+  #maxHealth = 10
+  #health = 10
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'player');
     this.scene.physics.add.existing(this);
@@ -123,6 +125,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             } else {
               if (this.attackTarget?.active) {
                 const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
+                bullet.owner = 'player'
                 bullet.enable();
                 this.scene.physics.moveToObject(bullet, this.attackTarget, bullet.speed);
                 this.stateMachine.set('attack-backswing')
@@ -155,7 +158,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           // TODO: to be implemented
         },
         dead: {
-          // TODO: to be implemented
+          onEnter: () => {
+            this.body.setEnable(false);
+            this.play('idle');
+            this.scene.scene.pause();
+            this.scene.scene.launch('game-over');
+          }
         }
       }
     })
@@ -165,5 +173,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   preUpdate(time: number, dt: number) {
     super.preUpdate(time, dt)
     this.stateMachine.update(dt)
+  }
+
+  takeDamage(amount: number) {
+    this.#health -= amount;
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0.3,
+      duration: 100,
+      yoyo: true,
+      repeat: 1
+    });
+    if (this.#health <= 0) {
+      this.stateMachine.set('dead');
+    }
   }
 }

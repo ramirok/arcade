@@ -16,7 +16,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   #attackPrepareTimer = 500
   #recalculateAttackMoveTimeInitial = 200
   #recalculateAttackMoveTimer = 0
-  #attackRange = 100
+  #attackRange = 200
   #attackBackswingTimeInitial = 500
   #attackBackswingTimer = 500
   #movementSpeed = 100
@@ -104,6 +104,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             } else {
               if (this.#attackTarget?.active) {
                 const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
+                bullet.owner = 'enemy'
                 bullet.enable();
                 this.scene.physics.moveToObject(bullet, this.#attackTarget, bullet.speed);
                 this.stateMachine.set('attack-backswing')

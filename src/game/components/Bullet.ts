@@ -3,6 +3,7 @@ export class Bullet extends Phaser.GameObjects.Rectangle {
   declare body: Phaser.Physics.Arcade.Body;
   damage = 1
   speed = 600
+  owner: 'player' | 'enemy' = 'player'
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 20, 20, 0x0000ff);
