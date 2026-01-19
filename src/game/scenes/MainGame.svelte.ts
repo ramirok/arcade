@@ -33,8 +33,6 @@ export class MainGame extends Phaser.Scene {
 
   preload() {
     console.log('MainGame preload');
-    this.load.image('tiles', 'assets/tileset.png');
-    this.load.tilemapTiledJSON('map', 'assets/map.json');
     this.load.image('bg-chunk-0-0', 'assets/bg-1.png')
     this.load.image('bg-chunk-0-1', 'assets/bg-2.png')
     this.load.image('bg-chunk-0-2', 'assets/bg-3.png')
