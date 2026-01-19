@@ -1,0 +1,22 @@
+import { GRID_CELL_SIZE } from "./scenes/MainGame.svelte";
+
+export const getPixelPosition = (cellX: number, cellY: number) => {
+  return {
+    x: (cellX * GRID_CELL_SIZE) + (GRID_CELL_SIZE / 2),
+    y: (cellY * GRID_CELL_SIZE) + (GRID_CELL_SIZE / 2)
+  };
+}
+export const getCellFromPixel = (pixelX: number, pixelY: number) => {
+  return {
+    cellX: Math.floor(pixelX / GRID_CELL_SIZE),
+    cellY: Math.floor(pixelY / GRID_CELL_SIZE)
+  };
+}
+
+export const isWithinRange = (x1: number, y1: number, x2: number, y2: number, range: number) => {
+  const distanceToTarget = Phaser.Math.Distance.Between(
+    x1, y1,
+    x2, y2
+  );
+  return distanceToTarget < range
+}

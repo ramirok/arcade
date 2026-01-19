@@ -1,87 +1,178 @@
 import type { MainGame } from "../scenes/MainGame.svelte";
-import type { Shot } from "./Shot";
+import { StateMachine } from "../stateMachine";
+import type { Castle } from "./Castle";
+import type { Player } from "./Player";
+import type { Bullet } from "./Bullet";
+import { isWithinRange } from "../utils";
 
-export class Enemy extends Phaser.GameObjects.Ellipse {
+type AttackTarget = Player | Castle | null
+export class Enemy extends Phaser.Physics.Arcade.Sprite {
   declare body: Phaser.Physics.Arcade.Body;
   declare scene: MainGame;
-  damage = 10
-  #health = 5
-  #recalculateTargetTime = 200
-  #recalculateTargetTimeElapsed = 0
-  #hitCooldownTime = 2000
-  #hitCooldownElapsed = 0
-  damageCooldownTime = 500
-  damageCooldownElapsed = 0
-  knockbackForce = 100
+  id = crypto.randomUUID()
+  stateMachine
+  #attackTarget: AttackTarget = null
+  #attackPrepareTimeInitial = 500
+  #attackPrepareTimer = 500
+  #recalculateAttackMoveTimeInitial = 200
+  #recalculateAttackMoveTimer = 0
+  #attackRange = 100
+  #attackBackswingTimeInitial = 500
+  #attackBackswingTimer = 500
+  #movementSpeed = 100
+  #chaseRange = 400
 
-  // overlapZone: Phaser.GameObjects.Zone; // New property
+  constructor(scene: MainGame, x: number, y: number, texture: string) {
+    super(scene, x, y, texture);
+
+    this.setInteractive()
+    this.scene.physics.add.existing(this)
+
+    this.stateMachine = new StateMachine({
+      // debug: true,
+      name: 'EnemyMachine',
+      initial: 'idle',
+      states: {
+        idle: {
+          onEnter: () => {
+            this.#attackTarget = null
+          },
+          onUpdate: () => {
+            const attackTargets = [this.scene.player, this.scene.castle];
+            let closestEnemy: NonNullable<AttackTarget> = this.scene.castle;
+            let shortestDistance = Infinity;
+            for (const possibleTarget of attackTargets) {
+              const dist = Phaser.Math.Distance.Between(this.x, this.y, possibleTarget.x, possibleTarget.y);
+              if (dist < shortestDistance) {
+                shortestDistance = dist;
+                closestEnemy = possibleTarget;
+              }
+            }
+            this.#attackTarget = closestEnemy;
+            if (shortestDistance <= this.#attackRange) {
+              this.stateMachine.set('attack-prepare');
+            } else if (shortestDistance <= this.#chaseRange) {
+              this.stateMachine.set('attack-move', closestEnemy);
+            } else {
+              this.scene.physics.moveToObject(this, this.scene.castle, this.#movementSpeed);
+            }
+          }
+        },
+        // move: {
+        //   // TODO: to be implemented
+        // },
+        'attack-move': {
+          reenter: true,
+          onEnter: (target: Player | Castle) => {
+            this.#attackTarget = target
+          },
+          onUpdate: (dt) => {
+            if (!this.#attackTarget?.active) {
+              return
+            }
+            if (this.#recalculateAttackMoveTimer > 0) {
+              this.#recalculateAttackMoveTimer -= dt
+            } else {
+              this.#recalculateAttackMoveTimer = this.#recalculateAttackMoveTimeInitial
+              const distanceToTarget = Phaser.Math.Distance.Between(this.x, this.y, this.#attackTarget.x, this.#attackTarget.y)
+              if (distanceToTarget < this.#attackRange) {
+                this.stateMachine.set('attack-prepare')
+              } else if (distanceToTarget < this.#chaseRange) {
+                this.scene.physics.moveToObject(this, this.#attackTarget, this.#movementSpeed);
+              } else {
+                this.stateMachine.set('idle')
+              }
+            }
+          },
+          onExit: () => {
+            this.body.setVelocity(0)
+          }
+        },
+        'attack-prepare': {
+          onEnter: () => {
+            this.#attackPrepareTimer = this.#attackPrepareTimeInitial
+            if (!this.#attackTarget?.active) {
+              this.stateMachine.set('idle')
+            }
+          },
+          onUpdate: (dt) => {
+            if (this.#attackPrepareTimer > 0) {
+              this.#attackPrepareTimer -= dt
+            } else {
+              if (this.#attackTarget?.active) {
+                const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
+                bullet.enable();
+                this.scene.physics.moveToObject(bullet, this.#attackTarget, bullet.speed);
+                this.stateMachine.set('attack-backswing')
+              }
+            }
+          }
+        },
+        'attack-backswing': {
+          onEnter: () => {
+            this.#attackBackswingTimer = this.#attackBackswingTimeInitial
+          },
+          onUpdate: (dt) => {
+            if (this.#attackBackswingTimer > 0) {
+              this.#attackBackswingTimer -= dt
+            } else {
+              if (this.#attackTarget?.active) {
+                const withinRange = isWithinRange(this.x, this.y, this.#attackTarget.x, this.#attackTarget.y, this.#attackRange)
+                if (withinRange) {
+                  this.stateMachine.set('attack-prepare')
+                } else {
+                  this.stateMachine.set('attack-move', this.#attackTarget)
+                }
+              } else {
+                this.stateMachine.set('idle')
+              }
+            }
+          }
+        },
+        cast: {
+          // TODO: to be implemented
+        },
+        dead: {
+          // TODO: to be implemented
+        }
+      }
+    })
+  }
+
+  preUpdate(time: number, dt: number) {
+    super.preUpdate(time, dt)
+    this.stateMachine.update(dt)
+  }
+
+
+  disable() {
+    this.setActive(false);
+    this.setVisible(false)
+    this.body.setEnable(false)
+  }
+
+  enable() {
+    this.setActive(true);
+    this.setVisible(true)
+    this.body.setEnable(true)
+  }
+}
+
+
+export class Slime extends Enemy {
   constructor(scene: MainGame, x: number, y: number) {
-    super(scene, x, y, 40, 40, 0xff0000);
+    super(scene, x, y, 'slime')
 
-    // // 1. Create a zone larger than the enemy (e.g., 80x80)
-    // this.overlapZone = this.scene.add.zone(x, y, 80, 80);
-    // this.scene.physics.add.existing(this.overlapZone);
-    // // 2. Make the zone follow the enemy's velocity
-    // (this.overlapZone.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
-  }
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
 
-  update(_: number, delta: number) {
-    // // 3. Keep the zone centered on the enemy
-    // this.overlapZone.x = this.x;
-    // this.overlapZone.y = this.y;
-
-    if (this.damageCooldownElapsed > 0) {
-      this.damageCooldownElapsed -= delta
-    }
-    if (this.#hitCooldownElapsed > 0) {
-      this.#hitCooldownElapsed -= delta
-    }
-    if (this.#recalculateTargetTimeElapsed < this.#recalculateTargetTime) {
-      this.#recalculateTargetTimeElapsed += delta
-      return
-    }
-
-    const distToPlayer = Phaser.Math.Distance.Between(
-      this.x, this.y,
-      this.scene.player.x, this.scene.player.y
-    );
-
-    const distToCastle = Phaser.Math.Distance.Between(
-      this.x, this.y,
-      this.scene.castle.x, this.scene.castle.y
-    );
-
-    let target
-    if (this.#hitCooldownElapsed > 0) {
-      target = this.scene.player
-    } else {
-      target = distToPlayer < distToCastle
-        ? this.scene.player
-        : this.scene.castle;
-    }
-    const edgeToEdgeStopDistance = (this.scene.castle.width / 2) + (this.width / 2) + 20;
-
-    if (target === this.scene.castle && distToCastle <= edgeToEdgeStopDistance) {
-      (this.body as Phaser.Physics.Arcade.Body).setVelocity(0, 0);
-    } else {
-      this.scene.physics.moveToObject(this, target, 100);
-    }
-    this.#recalculateTargetTimeElapsed = 0
-  }
-
-  hit(shot: Shot) {
-    this.#health -= shot.damage
-    if (this.#health < 1) {
-      this.#die()
-    } else {
-      this.#hitCooldownElapsed = this.#hitCooldownTime
-      this.scene.physics.moveToObject(this, this.scene.player, 100);
-    }
-  }
-
-  #die() {
-    this.scene.player.exp += this.damage
-    this.destroy()
-    // this.overlapZone.destroy()
+    this.anims.create({
+      key: 'idle',
+      frames: this.anims.generateFrameNumbers('slime'),
+      frameRate: 8,
+      repeat: -1, // Loop forever
+      randomFrame: true,
+    });
+    this.play('idle');
   }
 }
