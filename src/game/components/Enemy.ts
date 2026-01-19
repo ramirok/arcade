@@ -195,12 +195,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(amount: number) {
     this.#health -= amount;
+    this.setTint(0xff0000);
     this.scene.tweens.add({
       targets: this,
-      alpha: 0.3,
-      duration: 100,
-      yoyo: true,
-      repeat: 1
+      duration: 150,
+      onComplete: () => this.clearTint()
     });
     if (this.#health <= 0) {
       this.stateMachine.set('dead');
