@@ -5,6 +5,17 @@ import type { Player } from "./Player";
 import type { Bullet } from "./Bullet";
 import { isWithinRange } from "../utils";
 
+export interface EnemyConfig {
+  maxHealth: number;
+  damage: number;
+  attackRange: number;
+  chaseRange: number;
+  movementSpeed: number;
+  attackPrepareTime: number;
+  attackBackswingTime: number;
+  recalculateAttackMoveTime: number;
+}
+
 type AttackTarget = Player | Castle | null
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   declare body: Phaser.Physics.Arcade.Body;
@@ -25,8 +36,18 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   #health = 3
   #damage = 1
 
-  constructor(scene: MainGame, x: number, y: number, texture: string) {
+  constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
+
+    this.#maxHealth = config.maxHealth;
+    this.#health = config.maxHealth;
+    this.#damage = config.damage;
+    this.#attackRange = config.attackRange;
+    this.#chaseRange = config.chaseRange;
+    this.#movementSpeed = config.movementSpeed;
+    this.#attackPrepareTimeInitial = config.attackPrepareTime;
+    this.#attackBackswingTimeInitial = config.attackBackswingTime;
+    this.#recalculateAttackMoveTimeInitial = config.recalculateAttackMoveTime;
 
     this.setInteractive()
     this.scene.physics.add.existing(this)
@@ -190,7 +211,16 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
 export class Slime extends Enemy {
   constructor(scene: MainGame, x: number, y: number) {
-    super(scene, x, y, 'slime')
+    super(scene, x, y, 'slime', {
+      maxHealth: 3,
+      damage: 1,
+      attackRange: 200,
+      chaseRange: 400,
+      movementSpeed: 100,
+      attackPrepareTime: 500,
+      attackBackswingTime: 500,
+      recalculateAttackMoveTime: 200
+    })
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -199,7 +229,7 @@ export class Slime extends Enemy {
       key: 'idle',
       frames: this.anims.generateFrameNumbers('slime'),
       frameRate: 8,
-      repeat: -1, // Loop forever
+      repeat: -1,
       randomFrame: true,
     });
     this.play('idle');
