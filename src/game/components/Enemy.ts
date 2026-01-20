@@ -14,6 +14,7 @@ export interface EnemyConfig {
   attackPrepareTime: number;
   attackBackswingTime: number;
   recalculateAttackMoveTime: number;
+  xpValue: number;
 }
 
 type AttackTarget = Player | Castle | null
@@ -35,6 +36,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   #maxHealth = 3
   #health = 3
   #damage = 1
+  #xpValue = 1
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
@@ -48,6 +50,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.#attackPrepareTimeInitial = config.attackPrepareTime;
     this.#attackBackswingTimeInitial = config.attackBackswingTime;
     this.#recalculateAttackMoveTimeInitial = config.recalculateAttackMoveTime;
+    this.#xpValue = config.xpValue;
 
     this.setInteractive()
     this.scene.physics.add.existing(this)
@@ -166,6 +169,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
               duration: 300,
               onComplete: () => {
                 this.disable();
+                this.scene.player.gainXP(this.#xpValue);
               }
             });
           }
@@ -193,6 +197,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.stateMachine.set('idle')
   }
 
+  get xpValue(): number {
+    return this.#xpValue;
+  }
+
   takeDamage(amount: number) {
     this.#health -= amount;
     this.setTint(0xff0000);
@@ -218,7 +226,8 @@ export class Slime extends Enemy {
       movementSpeed: 100,
       attackPrepareTime: 500,
       attackBackswingTime: 500,
-      recalculateAttackMoveTime: 200
+      recalculateAttackMoveTime: 200,
+      xpValue: 1
     })
 
     scene.add.existing(this);

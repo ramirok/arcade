@@ -21,6 +21,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   #recalculateAttackMoveTimer = 0
   #maxHealth = 10
   #health = 10
+  #xp = 0
+  #level = 1
+  #xpToNextLevel = 10
+  #skillPoints = 0
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'player');
     this.scene.physics.add.existing(this);
@@ -174,6 +178,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   preUpdate(time: number, dt: number) {
     super.preUpdate(time, dt)
     this.stateMachine.update(dt)
+    console.log(this.#level, this.#xp, this.#skillPoints)
   }
 
   takeDamage(amount: number) {
@@ -186,6 +191,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     });
     if (this.#health <= 0) {
       this.stateMachine.set('dead');
+    }
+  }
+
+  gainXP(amount: number) {
+    this.#xp += amount;
+    while (this.#xp >= this.#xpToNextLevel) {
+      this.#level++;
+      this.#skillPoints += 5;
+      this.#xpToNextLevel = Math.floor(this.#xpToNextLevel * 1.5);
     }
   }
 }
