@@ -183,6 +183,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   takeDamage(amount: number) {
     this.#health -= amount;
+    this.scene.cameras.main.shake(100, 0.003);
     this.setTint(0xff0000);
     this.scene.tweens.add({
       targets: this,
