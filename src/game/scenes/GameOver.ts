@@ -27,10 +27,6 @@ export class GameOver extends Phaser.Scene {
   }
 
   #restartGame() {
-    this.scene.stop();
-
-    this.scene.stop('ui-scene');
-
     this.scene.start('main-game');
   }
 }

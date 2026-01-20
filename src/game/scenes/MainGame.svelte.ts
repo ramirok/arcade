@@ -29,6 +29,7 @@ export class MainGame extends Phaser.Scene {
 
   init() {
     console.log('MainGame init');
+    this.#visibleChunks = {};
   }
 
   preload() {
