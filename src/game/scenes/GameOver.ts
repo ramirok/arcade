@@ -20,9 +20,11 @@ export class GameOver extends Phaser.Scene {
       fontSize: '36px'
     }).setOrigin(.5)
 
-    const button = new Button(this, middleX, middleY, 'RESTART')
-    button.on('pointerdown', () => {
-      this.#restartGame()
+    new Button(this, middleX, middleY, {
+      text: 'RESTART',
+      onClick: () => {
+        this.#restartGame()
+      }
     })
   }
 

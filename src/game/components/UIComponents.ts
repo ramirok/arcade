@@ -1,9 +1,14 @@
+type ButtonProps = {
+  text: string,
+  onClick: () => void
+}
+
 export class Button extends Phaser.GameObjects.Container {
-  constructor(scene: Phaser.Scene, x: number, y: number, text: string) {
+  constructor(scene: Phaser.Scene, x: number, y: number, props: ButtonProps) {
     super(scene, x, y);
 
     const textColor = '#ffffff'
-    const textButton = this.scene.add.text(0, 0, text, {
+    const textButton = this.scene.add.text(0, 0, props.text, {
       backgroundColor: '#333',
       padding: { x: 20, y: 10 },
       color: textColor
@@ -21,5 +26,6 @@ export class Button extends Phaser.GameObjects.Container {
     this
       .on('pointerover', () => textButton.setStyle({ fill: '#ff0' }))
       .on('pointerout', () => textButton.setStyle({ fill: textColor }))
+      .on('pointerdown', props.onClick)
   }
 }

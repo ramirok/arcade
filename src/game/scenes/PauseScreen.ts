@@ -15,9 +15,11 @@ export class PauseScreen extends Phaser.Scene {
       this.#resumeGame()
     })
 
-    const button = new Button(this, this.cameras.main.width / 2, this.cameras.main.height / 2, 'CONTINUE')
-    button.on('pointerdown', () => {
-      this.#resumeGame()
+    new Button(this, this.cameras.main.width / 2, this.cameras.main.height / 2, {
+      text: 'CONTINUE',
+      onClick: () => {
+        this.#resumeGame()
+      }
     })
   }
 
