@@ -76,6 +76,8 @@ export class MainGame extends Phaser.Scene {
     this.castle = new Castle(this, WORLD_WIDTH / 2, WORLD_HEIGHT / 2)
     new Cursor(this, 0, 0);
 
+    this.scene.launch('ui-scene');
+
     this.#camLastX = this.cameras.main.scrollX
     this.#camLastY = this.cameras.main.scrollY
     this.#updateChunks()
