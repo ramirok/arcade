@@ -1,13 +1,5 @@
 import type { MainGame } from "./MainGame.svelte";
 
-const getHealthTextString = (health: number) => {
-  return `Health: ${health}%`
-}
-
-const getExpTextString = (exp: number) => {
-  return `Exp: ${exp}`
-}
-
 // UIScene.ts
 export class UIScene extends Phaser.Scene {
   #mainGame!: MainGame
