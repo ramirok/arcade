@@ -128,7 +128,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             } else {
               if (this.#attackTarget?.active) {
                 const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
-                bullet.owner = 'enemy'
+                bullet.ownerEntity = this
                 bullet.enable();
                 this.scene.physics.moveToObject(bullet, this.#attackTarget, bullet.speed);
                 this.stateMachine.set('attack-backswing')
@@ -199,6 +199,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   get xpValue(): number {
     return this.#xpValue;
+  }
+
+  get damage(): number {
+    return this.#damage;
   }
 
   takeDamage(amount: number) {

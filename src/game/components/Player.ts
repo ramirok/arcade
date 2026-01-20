@@ -25,6 +25,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   #level = 1
   #xpToNextLevel = 10
   #skillPoints = 0
+  #damage = 1
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'player');
     this.scene.physics.add.existing(this);
@@ -130,7 +131,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             } else {
               if (this.attackTarget?.active) {
                 const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
-                bullet.owner = 'player'
+                bullet.ownerEntity = this
                 bullet.enable();
                 this.scene.physics.moveToObject(bullet, this.attackTarget, bullet.speed);
                 this.stateMachine.set('attack-backswing')
@@ -178,7 +179,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   preUpdate(time: number, dt: number) {
     super.preUpdate(time, dt)
     this.stateMachine.update(dt)
-    console.log(this.#level, this.#xp, this.#skillPoints)
   }
 
   takeDamage(amount: number) {
@@ -201,5 +201,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.#skillPoints += 5;
       this.#xpToNextLevel = Math.floor(this.#xpToNextLevel * 1.5);
     }
+  }
+
+  get damage(): number {
+    return this.#damage;
   }
 }

@@ -130,7 +130,8 @@ export class MainGame extends Phaser.Scene {
       const bullet = bulletObj as Bullet;
       const enemy = enemyObj as Enemy;
       if (bullet.active && enemy.active && bullet.owner === 'player') {
-        enemy.takeDamage(bullet.damage);
+        const damage = bullet.ownerEntity?.damage ?? 1;
+        enemy.takeDamage(damage);
         bullet.disable();
       }
     })
@@ -139,7 +140,8 @@ export class MainGame extends Phaser.Scene {
       const player = playerObj as Player;
       const bullet = bulletObj as Bullet;
       if (bullet.active && bullet.owner === 'enemy') {
-        player.takeDamage(bullet.damage);
+        const damage = bullet.ownerEntity?.damage ?? 1;
+        player.takeDamage(damage);
         bullet.disable();
       }
     })
@@ -148,7 +150,8 @@ export class MainGame extends Phaser.Scene {
       const castle = castleObj as Castle;
       const bullet = bulletObj as Bullet;
       if (bullet.active && bullet.owner === 'enemy') {
-        castle.takeDamage(bullet.damage);
+        const damage = bullet.ownerEntity?.damage ?? 1;
+        castle.takeDamage(damage);
         bullet.disable();
       }
     })
