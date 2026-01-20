@@ -15,6 +15,7 @@ export interface EnemyConfig {
   attackBackswingTime: number;
   recalculateAttackMoveTime: number;
   xpValue: number;
+  maxMana: number;
 }
 
 type AttackTarget = Player | Castle | null
@@ -37,6 +38,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   #health = 3
   #damage = 1
   #xpValue = 1
+  #maxMana = 0
+  #mana = 0
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
@@ -51,6 +54,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.#attackBackswingTimeInitial = config.attackBackswingTime;
     this.#recalculateAttackMoveTimeInitial = config.recalculateAttackMoveTime;
     this.#xpValue = config.xpValue;
+    this.#maxMana = config.maxMana;
+    this.#mana = config.maxMana;
 
     this.setInteractive()
     this.scene.physics.add.existing(this)
@@ -194,6 +199,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setVisible(true)
     this.body.setEnable(true)
     this.#health = this.#maxHealth
+    this.#mana = this.#maxMana
     this.stateMachine.set('idle')
   }
 
@@ -203,6 +209,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   get damage(): number {
     return this.#damage;
+  }
+
+  get mana(): number {
+    return this.#mana;
+  }
+
+  get maxMana(): number {
+    return this.#maxMana;
   }
 
   takeDamage(amount: number) {
@@ -231,7 +245,8 @@ export class Slime extends Enemy {
       attackPrepareTime: 500,
       attackBackswingTime: 500,
       recalculateAttackMoveTime: 200,
-      xpValue: 1
+      xpValue: 1,
+      maxMana: 5
     })
 
     scene.add.existing(this);

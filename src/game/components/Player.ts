@@ -26,6 +26,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   #xpToNextLevel = 10
   #skillPoints = 0
   #damage = 1
+  #maxMana = 10
+  #mana = 10
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'player');
     this.scene.physics.add.existing(this);
@@ -206,5 +208,33 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   get damage(): number {
     return this.#damage;
+  }
+
+  get health(): number {
+    return this.#health;
+  }
+
+  get maxHealth(): number {
+    return this.#maxHealth;
+  }
+
+  get xp(): number {
+    return this.#xp;
+  }
+
+  get xpToNextLevel(): number {
+    return this.#xpToNextLevel;
+  }
+
+  get level(): number {
+    return this.#level;
+  }
+
+  get mana(): number {
+    return this.#mana;
+  }
+
+  get maxMana(): number {
+    return this.#maxMana;
   }
 }
