@@ -11,7 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
   width: 1920,
   height: 1080,
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.EXPAND,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   autoRound: true,

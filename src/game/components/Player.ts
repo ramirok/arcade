@@ -35,6 +35,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setCollideWorldBounds(true);
     this.scene.cameras.main.startFollow(this);
     this.scene.cameras.main.setDeadzone(500, 300)
+    this.scene.scale.on('resize', () => {
+      this.scene.cameras.main.pan(
+        this.x,
+        this.y,
+        500,
+        'Power2'
+      );
+    })
 
     this.anims.create({
       key: 'idle',
