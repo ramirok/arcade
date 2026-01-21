@@ -62,12 +62,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             this.attackTarget = null
           },
           onUpdate: () => {
-            const enemies = this.scene.enemies.getChildren() as Enemy[];
+            const enemies = this.scene.enemies.getMatching('active', true) as Enemy[];
             if (enemies.length === 0) return;
             let closestEnemy: Enemy | null = null;
             let shortestDistance = Infinity;
             for (const enemy of enemies) {
-              if (!enemy.active) return;
               const dist = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
               if (dist < shortestDistance) {
                 shortestDistance = dist;
