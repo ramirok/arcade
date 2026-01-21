@@ -7,5 +7,5 @@
   >
     MYBUTTON
   </button>
-  <a href="/debug">go to debug</a>
+  <a href="/">go to home</a>
 </div>
