@@ -1,4 +1,4 @@
-import { GRID_CELL_SIZE } from "./scenes/MainGame.svelte";
+import { GRID_CELL_SIZE } from "./scenes/MainGame";
 
 export const getPixelPosition = (cellX: number, cellY: number) => {
   return {

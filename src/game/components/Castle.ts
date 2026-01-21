@@ -1,5 +1,5 @@
 
-import type { MainGame } from "../scenes/MainGame.svelte";
+import type { MainGame } from "../scenes/MainGame";
 
 export class Castle extends Phaser.Physics.Arcade.Sprite {
   declare scene: MainGame

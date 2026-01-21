@@ -1,4 +1,4 @@
-import type { MainGame } from "../scenes/MainGame.svelte";
+import type { MainGame } from "../scenes/MainGame";
 import type { Bullet } from "./Bullet";
 import { StateMachine } from "../stateMachine";
 import { Enemy } from "./Enemy";

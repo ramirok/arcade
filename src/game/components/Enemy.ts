@@ -1,4 +1,4 @@
-import type { MainGame } from "../scenes/MainGame.svelte";
+import type { MainGame } from "../scenes/MainGame";
 import { StateMachine } from "../stateMachine";
 import type { Castle } from "./Castle";
 import type { Player } from "./Player";

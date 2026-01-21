@@ -1,4 +1,4 @@
-import type { MainGame } from "./MainGame.svelte";
+import type { MainGame } from "./MainGame";
 
 export class UIScene extends Phaser.Scene {
   #mainGame!: MainGame
