@@ -1,4 +1,3 @@
-
 import { Bootloader } from "./scenes/Bootloader";
 import { MainGame } from "./scenes/MainGame";
 import { PauseScreen } from "./scenes/PauseScreen";
@@ -26,5 +25,5 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 export const StartGame = (parent: string) => {
-  new Game({ ...config, parent });
+  return new Game({ ...config, parent });
 };

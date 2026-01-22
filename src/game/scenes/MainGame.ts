@@ -156,6 +156,7 @@ export class MainGame extends Scene {
         bullet.disable();
       }
     })
+    this.game.events.emit('main-scene-ready');
   }
 
   update() {
