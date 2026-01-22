@@ -182,6 +182,8 @@ export class Enemy extends Physics.Arcade.Sprite {
         }
       }
     })
+
+    this.stateMachine.start()
   }
 
   preUpdate(time: number, dt: number) {
@@ -202,7 +204,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.body.setEnable(true)
     this.#health = this.#maxHealth
     this.#mana = this.#maxMana
-    this.stateMachine.set('idle')
+    this.stateMachine.reset()
   }
 
   get xpValue(): number {

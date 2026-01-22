@@ -53,11 +53,13 @@ export class StateMachine<
   InitialState extends keyof TStates
 > {
   #current;
+  #initialState;
   #states;
   #machineName;
   #debug
   constructor(config: { name: string, initial: InitialState, states: TStates, debug?: boolean }) {
     this.#debug = config.debug
+    this.#initialState = config.initial
     this.#current = config.initial as keyof TStates;
     this.#states = config.states;
     // this.#states[config.initial].onEnter?.()
@@ -107,5 +109,14 @@ export class StateMachine<
       console.log(`[${this.#machineName}]: Starting machine at ${initialState as string}`);
     }
     this.#states[initialState].onEnter?.(payload[0]);
+  }
+  reset(
+    ...payload: Parameters<NonNullable<TStates[InitialState]['onEnter']>>[0] extends void
+      ? []
+      : [payload: Parameters<NonNullable<TStates[InitialState]['onEnter']>>[0]]
+  ) {
+    this.#states[this.#current].onExit?.();
+    this.#current = this.#initialState as keyof TStates;
+    this.#states[this.#current].onEnter?.(payload[0]);
   }
 }
