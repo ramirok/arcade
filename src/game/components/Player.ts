@@ -2,12 +2,12 @@ import type { MainGame } from "../scenes/MainGame";
 import type { Bullet } from "./Bullet";
 import { StateMachine } from "../stateMachine";
 import { Enemy } from "./Enemy";
-import Phaser from "phaser";
 import { getPixelPosition, isWithinRange } from "../utils";
+import { Math as PhaserMath, Physics } from "phaser";
 
-export class Player extends Phaser.Physics.Arcade.Sprite {
+export class Player extends Physics.Arcade.Sprite {
   declare scene: MainGame
-  declare body: Phaser.Physics.Arcade.Body;
+  declare body: Physics.Arcade.Body;
   attackTarget: null | Enemy = null
   stateMachine
   path: number[][] = []
@@ -67,7 +67,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             let closestEnemy: Enemy | null = null;
             let shortestDistance = Infinity;
             for (const enemy of enemies) {
-              const dist = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
+              const dist = PhaserMath.Distance.Between(this.x, this.y, enemy.x, enemy.y);
               if (dist < shortestDistance) {
                 shortestDistance = dist;
                 closestEnemy = enemy;
@@ -88,7 +88,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           onUpdate: () => {
             const nextPoint = getPixelPosition(this.path[0][0], this.path[0][1])
             this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
-            const distance = Phaser.Math.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
+            const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
             if (distance < 4) {
               this.path.shift()
               if (!this.path.length) {

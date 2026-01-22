@@ -1,10 +1,12 @@
+import { GameObjects, Geom, Scene } from "phaser";
+
 type ButtonProps = {
   text: string,
   onClick: () => void
 }
 
-export class Button extends Phaser.GameObjects.Container {
-  constructor(scene: Phaser.Scene, x: number, y: number, props: ButtonProps) {
+export class Button extends GameObjects.Container {
+  constructor(scene: Scene, x: number, y: number, props: ButtonProps) {
     super(scene, x, y);
 
     const textColor = '#ffffff'
@@ -18,8 +20,8 @@ export class Button extends Phaser.GameObjects.Container {
     this.y = this.y - textButton.height / 2
 
     this.scene.add.existing(this)
-    const containerArea = new Phaser.Geom.Rectangle(0, 0, textButton.width, textButton.height)
-    this.setInteractive(containerArea, Phaser.Geom.Rectangle.Contains)
+    const containerArea = new Geom.Rectangle(0, 0, textButton.width, textButton.height)
+    this.setInteractive(containerArea, Geom.Rectangle.Contains)
 
     this.add([textButton])
 

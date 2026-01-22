@@ -1,6 +1,7 @@
+import { Scene } from "phaser";
 import { Button } from "../components/UIComponents";
 
-export class GameOver extends Phaser.Scene {
+export class GameOver extends Scene {
   constructor() {
     super('game-over')
   }

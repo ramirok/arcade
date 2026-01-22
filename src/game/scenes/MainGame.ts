@@ -5,6 +5,7 @@ import { Player } from "../components/Player";
 import { Bullet } from "../components/Bullet";
 import { getCellFromPixel } from "../utils";
 import PF from 'pathfinding'
+import { GameObjects, Geom, Input, Math as PhaserMath, Physics, Scene } from "phaser";
 
 export const WORLD_WIDTH = 3000
 export const WORLD_HEIGHT = 3000
@@ -12,17 +13,17 @@ export const GRID_CELL_SIZE = 30
 export const GRID_WIDTH = WORLD_WIDTH / GRID_CELL_SIZE
 export const GRID_HEIGHT = WORLD_HEIGHT / GRID_CELL_SIZE
 
-export class MainGame extends Phaser.Scene {
+export class MainGame extends Scene {
   //create
   player!: Player;
   castle!: Castle
-  bullets!: Phaser.Physics.Arcade.Group;
-  enemies!: Phaser.Physics.Arcade.Group;
+  bullets!: Physics.Arcade.Group;
+  enemies!: Physics.Arcade.Group;
   #camLastX!: number
   #camLastY!: number
 
   // initialized now
-  #visibleChunks: Record<string, Phaser.GameObjects.Image> = {}
+  #visibleChunks: Record<string, GameObjects.Image> = {}
   constructor() {
     super('main-game');
   }
@@ -82,7 +83,7 @@ export class MainGame extends Phaser.Scene {
     this.#camLastY = this.cameras.main.scrollY
     this.#updateChunks()
 
-    this.input.on('pointerdown', (pointerEvent: Phaser.Input.Pointer, currentlyOver: Phaser.GameObjects.GameObject[]) => {
+    this.input.on('pointerdown', (pointerEvent: Input.Pointer, currentlyOver: GameObjects.GameObject[]) => {
       if (pointerEvent.button === 2) {
         if (currentlyOver.length === 0) {
           const playerCell = getCellFromPixel(this.player.x, this.player.y)
@@ -218,16 +219,16 @@ export class MainGame extends Phaser.Scene {
 
   #spawnEnemy() {
     const safePadding = 500;
-    const safeZone = Phaser.Geom.Rectangle.Clone(this.castle.getBounds());
+    const safeZone = Geom.Rectangle.Clone(this.castle.getBounds());
 
-    Phaser.Geom.Rectangle.Inflate(safeZone, safePadding, safePadding);
+    Geom.Rectangle.Inflate(safeZone, safePadding, safePadding);
 
     let x, y;
     let isInsideSafeZone = true;
 
     while (isInsideSafeZone) {
-      x = Phaser.Math.Between(0, WORLD_WIDTH);
-      y = Phaser.Math.Between(0, WORLD_HEIGHT);
+      x = PhaserMath.Between(0, WORLD_WIDTH);
+      y = PhaserMath.Between(0, WORLD_HEIGHT);
       isInsideSafeZone = safeZone.contains(x, y);
     }
     const enemy = this.enemies.get(x, y);
@@ -236,11 +237,11 @@ export class MainGame extends Phaser.Scene {
       enemy.setActive(true);
       enemy.setVisible(true);
     }
-    this.time.delayedCall(Phaser.Math.Between(2000, 4000), this.#spawnEnemy, undefined, this)
+    this.time.delayedCall(PhaserMath.Between(2000, 4000), this.#spawnEnemy, undefined, this)
   }
 
-  #overlapRepel(objA: Phaser.GameObjects.Sprite, objB: Phaser.GameObjects.Sprite) {
-    const angle = Phaser.Math.Angle.BetweenPoints(objA, objB);
+  #overlapRepel(objA: GameObjects.Sprite, objB: GameObjects.Sprite) {
+    const angle = PhaserMath.Angle.BetweenPoints(objA, objB);
     const separationForce = 0.5;
     objA.x -= Math.cos(angle) * separationForce;
     objA.y -= Math.sin(angle) * separationForce;

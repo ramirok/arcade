@@ -1,3 +1,4 @@
+import { Math as PhaserMath } from "phaser";
 import { GRID_CELL_SIZE } from "./scenes/MainGame";
 
 export const getPixelPosition = (cellX: number, cellY: number) => {
@@ -14,7 +15,7 @@ export const getCellFromPixel = (pixelX: number, pixelY: number) => {
 }
 
 export const isWithinRange = (x1: number, y1: number, x2: number, y2: number, range: number) => {
-  const distanceToTarget = Phaser.Math.Distance.Between(
+  const distanceToTarget = PhaserMath.Distance.Between(
     x1, y1,
     x2, y2
   );

@@ -1,16 +1,16 @@
 
-import { AUTO, Game } from "phaser";
 import { Bootloader } from "./scenes/Bootloader";
 import { MainGame } from "./scenes/MainGame";
 import { PauseScreen } from "./scenes/PauseScreen";
 import { UIScene } from "./scenes/UI";
 import { GameOver } from "./scenes/GameOver";
+import { AUTO, Game, Scale } from "phaser";
 
 const config: Phaser.Types.Core.GameConfig = {
   type: AUTO,
   scale: {
-    mode: Phaser.Scale.EXPAND,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    mode: Scale.EXPAND,
+    autoCenter: Scale.CENTER_BOTH,
     width: 1920,
     height: 1080,
   },

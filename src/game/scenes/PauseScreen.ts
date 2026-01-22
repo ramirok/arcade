@@ -1,6 +1,7 @@
+import { Scene } from "phaser";
 import { Button } from "../components/UIComponents";
 
-export class PauseScreen extends Phaser.Scene {
+export class PauseScreen extends Scene {
   constructor() {
     super('pause-screen')
   }

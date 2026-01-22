@@ -4,6 +4,7 @@ import type { Castle } from "./Castle";
 import type { Player } from "./Player";
 import type { Bullet } from "./Bullet";
 import { isWithinRange } from "../utils";
+import { Physics, Math as PhaserMath } from "phaser";
 
 export interface EnemyConfig {
   maxHealth: number;
@@ -19,8 +20,8 @@ export interface EnemyConfig {
 }
 
 type AttackTarget = Player | Castle | null
-export class Enemy extends Phaser.Physics.Arcade.Sprite {
-  declare body: Phaser.Physics.Arcade.Body;
+export class Enemy extends Physics.Arcade.Sprite {
+  declare body: Physics.Arcade.Body;
   declare scene: MainGame;
   id = crypto.randomUUID()
   stateMachine
@@ -74,7 +75,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             let closestEnemy: NonNullable<AttackTarget> = this.scene.castle;
             let shortestDistance = Infinity;
             for (const possibleTarget of attackTargets) {
-              const dist = Phaser.Math.Distance.Between(this.x, this.y, possibleTarget.x, possibleTarget.y);
+              const dist = PhaserMath.Distance.Between(this.x, this.y, possibleTarget.x, possibleTarget.y);
               if (dist < shortestDistance) {
                 shortestDistance = dist;
                 closestEnemy = possibleTarget;
@@ -106,7 +107,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
               this.#recalculateAttackMoveTimer -= dt
             } else {
               this.#recalculateAttackMoveTimer = this.#recalculateAttackMoveTimeInitial
-              const distanceToTarget = Phaser.Math.Distance.Between(this.x, this.y, this.#attackTarget.x, this.#attackTarget.y)
+              const distanceToTarget = PhaserMath.Distance.Between(this.x, this.y, this.#attackTarget.x, this.#attackTarget.y)
               if (distanceToTarget < this.#attackRange) {
                 this.stateMachine.set('attack-prepare')
               } else if (distanceToTarget < this.#chaseRange) {
