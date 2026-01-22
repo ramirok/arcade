@@ -108,7 +108,7 @@ export class MainGame extends Scene {
 
     this.enemies = this.physics.add.group({
       classType: Slime,
-      maxSize: 10,
+      maxSize: 3,
       collideWorldBounds: true,
     })
     this.#spawnEnemy()
