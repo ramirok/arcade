@@ -198,6 +198,7 @@ export class Enemy extends Physics.Arcade.Sprite {
   enable() {
     this.setActive(true);
     this.setVisible(true)
+    this.setAlpha(1)
     this.body.setEnable(true)
     this.#health = this.#maxHealth
     this.#mana = this.#maxMana
