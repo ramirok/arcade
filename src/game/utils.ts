@@ -21,3 +21,19 @@ export const isWithinRange = (x1: number, y1: number, x2: number, y2: number, ra
   );
   return distanceToTarget < range
 }
+
+export const createEntityDataEventMap = <T extends string>(keys: T[]) => {
+  const data = {} as { [P in T]: P };
+
+  type EventMap = { [K in T as `changedata-${K}`]: `changedata-${K}` };
+  const events = {} as EventMap;
+
+  for (const key of keys) {
+    data[key] = key;
+
+    const eventName = `changedata-${key}` as keyof EventMap;
+    events[eventName] = eventName as EventMap[typeof eventName];
+  }
+
+  return { data, events };
+};

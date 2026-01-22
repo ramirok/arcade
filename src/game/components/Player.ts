@@ -2,8 +2,16 @@ import type { MainGame } from "../scenes/MainGame";
 import type { Bullet } from "./Bullet";
 import { StateMachine } from "../stateMachine";
 import { Enemy } from "./Enemy";
-import { getPixelPosition, isWithinRange } from "../utils";
+import { createEntityDataEventMap, getPixelPosition, isWithinRange } from "../utils";
 import { Math as PhaserMath, Physics } from "phaser";
+
+
+export const { events: playerEvents, data: playerData } = createEntityDataEventMap([
+  'health',
+  'xp',
+  'lvl',
+  'xpToNextLVL'
+])
 
 export class Player extends Physics.Arcade.Sprite {
   declare scene: MainGame
@@ -19,11 +27,7 @@ export class Player extends Physics.Arcade.Sprite {
   #attackBackswingTimer = 500
   #recalculateAttackMoveTimeInitial = 200
   #recalculateAttackMoveTimer = 0
-  #maxHealth = 10
-  #health = 10
-  #xp = 0
-  #level = 1
-  #xpToNextLevel = 10
+  #maxHealth = 100
   #skillPoints = 0
   #damage = 1
   #maxMana = 10
@@ -182,6 +186,11 @@ export class Player extends Physics.Arcade.Sprite {
       }
     })
     this.stateMachine.start()
+    this.setDataEnabled();
+    this.data.set(playerData.health, this.#maxHealth)
+    this.data.set(playerData.xp, 0)
+    this.data.set(playerData.lvl, 1)
+    this.data.set(playerData.xpToNextLVL, 10)
   }
 
   preUpdate(time: number, dt: number) {
@@ -190,7 +199,7 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   takeDamage(amount: number) {
-    this.#health -= amount;
+    this.data.inc(playerData.health, -amount)
     this.scene.cameras.main.shake(100, 0.003);
     this.setTint(0xff0000);
     this.scene.tweens.add({
@@ -198,17 +207,18 @@ export class Player extends Physics.Arcade.Sprite {
       duration: 150,
       onComplete: () => this.clearTint()
     });
-    if (this.#health <= 0) {
+
+    if (this.data.get(playerData.health) <= 0) {
       this.stateMachine.set('dead');
     }
   }
 
   gainXP(amount: number) {
-    this.#xp += amount;
-    while (this.#xp >= this.#xpToNextLevel) {
-      this.#level++;
+    this.data.inc('xp', amount)
+    while (this.data.get(playerData.xp) >= this.data.get(playerData.xpToNextLVL)) {
+      this.data.inc(playerData.lvl, 1)
       this.#skillPoints += 5;
-      this.#xpToNextLevel = Math.floor(this.#xpToNextLevel * 1.5);
+      this.data.inc(playerData.xpToNextLVL, Math.floor(this.data.get(playerData.xpToNextLVL) * 1.5))
     }
   }
 
@@ -216,24 +226,8 @@ export class Player extends Physics.Arcade.Sprite {
     return this.#damage;
   }
 
-  get health(): number {
-    return this.#health;
-  }
-
   get maxHealth(): number {
     return this.#maxHealth;
-  }
-
-  get xp(): number {
-    return this.#xp;
-  }
-
-  get xpToNextLevel(): number {
-    return this.#xpToNextLevel;
-  }
-
-  get level(): number {
-    return this.#level;
   }
 
   get mana(): number {
