@@ -52,7 +52,7 @@ export class StateMachine<
   },
   InitialState extends keyof TStates
 > {
-  #current;
+  #current: keyof TStates | undefined;
   #initialState;
   #states;
   #machineName;
@@ -60,7 +60,7 @@ export class StateMachine<
   constructor(config: { name: string, initial: InitialState, states: TStates, debug?: boolean }) {
     this.#debug = config.debug
     this.#initialState = config.initial
-    this.#current = config.initial as keyof TStates;
+    // this.#current = config.initial as keyof TStates;
     this.#states = config.states;
     // this.#states[config.initial].onEnter?.()
     this.#machineName = config.name
@@ -71,6 +71,9 @@ export class StateMachine<
       ? []
       : [payload: Parameters<NonNullable<TStates[NewState]['onEnter']>>[0]]
   ) {
+    if (!this.#current) {
+      throw new Error(`[${this.#machineName}] not started yet`)
+    }
     if (newState === this.#current && !this.#states[newState].reenter) {
       throw new Error(`[${this.#machineName}] Already on state "${newState as string}"`)
     }
@@ -83,7 +86,7 @@ export class StateMachine<
   }
   update(dt?: number) {
     if (!this.#current) {
-      return;
+      throw new Error(`[${this.#machineName}] not started yet`)
     }
     const onUpdate = this.#states[this.#current].onUpdate;
     if (!onUpdate) return;
@@ -94,6 +97,9 @@ export class StateMachine<
     }
   }
   getCurrent() {
+    if (!this.#current) {
+      throw new Error(`[${this.#machineName}] not started yet`)
+    }
     return this.#current
   }
   is(state: keyof TStates): boolean {
@@ -104,17 +110,20 @@ export class StateMachine<
       ? []
       : [payload: Parameters<NonNullable<TStates[InitialState]['onEnter']>>[0]]
   ) {
-    const initialState = this.#current;
+    this.#current = this.#initialState
     if (this.#debug) {
-      console.log(`[${this.#machineName}]: Starting machine at ${initialState as string}`);
+      console.log(`[${this.#machineName}]: Starting machine at ${this.#initialState as string}`);
     }
-    this.#states[initialState].onEnter?.(payload[0]);
+    this.#states[this.#initialState].onEnter?.(payload[0]);
   }
   reset(
     ...payload: Parameters<NonNullable<TStates[InitialState]['onEnter']>>[0] extends void
       ? []
       : [payload: Parameters<NonNullable<TStates[InitialState]['onEnter']>>[0]]
   ) {
+    if (!this.#current) {
+      throw new Error(`[${this.#machineName}] not started yet`)
+    }
     this.#states[this.#current].onExit?.();
     this.#current = this.#initialState as keyof TStates;
     this.#states[this.#current].onEnter?.(payload[0]);
