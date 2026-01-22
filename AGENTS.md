@@ -1,103 +1,187 @@
-# AGENTS.md
+# AGENTS.md - Arcade Roguelike Development Guide
 
-## Build, Lint, and Test Commands
+## Project Overview
+
+TypeScript-based arcade roguelike game using SolidJS for UI layer and Phaser 3 for game engine. Built with Vite, TailwindCSS v4, and strict TypeScript configuration.
+
+## Build Commands
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run check        # Run svelte-check for TypeScript validation
-npm run check:watch  # Run svelte-check in watch mode
+npm run dev          # Start Vite dev server at http://localhost:5173
+npm run build        # Run TypeScript compiler (tsc -b) then Vite production build to dist/
+npm run preview      # Preview the production build locally
 ```
-
-**Important**: Run `npm run check` before committing changes. There is no test framework configured.
 
 ## Code Style Guidelines
 
 ### Imports
 
-- Use `import type` for type-only imports
-- Use relative imports (`../utils`, `./components/Player`)
-- Do not use import aliases (`$lib` is handled by SvelteKit but prefer relative paths)
+- Use `import type` for type-only imports to preserve tree-shaking
+- Group imports: external libs first, then relative paths
+- Use named imports from Phaser: `import { Scene, Physics, Math as PhaserMath } from "phaser"`
 
-### Formatting
-
-- 2-space indentation
-- Always use semicolons
-- Single quotes for strings
-- Opening brace on same line
-
-### TypeScript
-
-- Enable strict mode (`strict: true` in tsconfig)
-- Use `declare` for extending Phaser classes with type information
-- Use union types for nullable states
-- Avoid `any` type
+```typescript
+import type { MainGame } from "../scenes/MainGame";
+import { StateMachine } from "../stateMachine";
+import { getPixelPosition } from "../utils";
+import { Math as PhaserMath, Physics } from "phaser";
+```
 
 ### Naming Conventions
 
-- **Classes**: PascalCase (`Player`, `StateMachine`, `MainGame`)
-- **Functions and variables**: camelCase (`getPixelPosition`, `movementSpeed`)
-- **Constants**: SCREAMING_SNAKE_CASE (`WORLD_WIDTH`, `GRID_CELL_SIZE`)
-- **Private fields**: Prefix with `#` (`#attackRange`, `#movementSpeed`)
-- **State names**: kebab-case (`'attack-prepare'`, `'attack-move'`, `'idle'`)
+- **Classes/PascalCase**: `Player`, `MainGame`, `StateMachine`
+- **Constants/UPPER_SNAKE_CASE**: `WORLD_WIDTH`, `GRID_CELL_SIZE`, `GRID_HEIGHT`
+- **Private fields/#prefix**: `#movementSpeed`, `#attackRange`, `#currentState`
+- **Functions/camelCase**: `getPixelPosition()`, `takeDamage()`, `enable()`
+- **Type aliases/PascalCase**: `EventMap`, `GameConfig`
+
+### TypeScript Strict Mode Rules
+
+- `noUnusedLocals: true` - Remove unused variables immediately
+- `noUnusedParameters: true` - Remove unused function parameters
+- `noFallthroughCasesInSwitch: true` - Always use break or return
+- `strict: true` - Enable all strict type-checking options
+- Declare class properties with `declare` when extending Phaser classes
+
+```typescript
+export class Player extends Physics.Arcade.Sprite {
+  declare scene: MainGame
+  declare body: Physics.Arcade.Body;
+```
+
+### Formatting
+
+- Use semicolons at statement ends
+- Prefer arrow functions for callbacks
+- Use ternary operators for simple conditionals
+- Avoid verbose comments; code should be self-documenting
+- Keep functions focused (under 50 lines ideal)
+
+### State Management
+
+**SolidJS Stores**: Use `createStore` for reactive entity data
+
+```typescript
+const [context, setContext] = createStore({
+  maxHealth: 100,
+  health: 100,
+  lvl: 1,
+  xp: 0,
+});
+this.context = context;
+this.setContext = setContext;
+```
+
+**StateMachine Pattern**: Use provided `StateMachine` class for entity behavior
+
+```typescript
+this.stateMachine = new StateMachine({
+  name: 'PlayerMachine',
+  initial: 'idle',
+  states: {
+    idle: {
+      onEnter: () => { /* ... */ },
+      onUpdate: () => { /* ... */ }
+    }
+  }
+});
+this.stateMachine.start();
+```
 
 ### Error Handling
 
-- Use `throw new Error()` with contextual messages
-- Prefix error messages with component/state machine name
-- Use `console.log()` for init and debug messages
+- Throw descriptive errors with context: `throw new Error(\`[StateMachine] Already in state "\${state}"\`)`
+- Use optional chaining and nullish coalescing for defensive access
+- Validate state before operations in state machine transitions
+- Handle null/undefined cases explicitly (avoid bare `||` fallbacks)
 
-### Comments
-
-- Do not add comments unless complex logic requires explanation
-- Remove commented-out code instead of leaving it
-- Use `// TODO:` for planned features that need implementation
-
-## Project Structure
-
-```
-src/game/
-├── components/         # Phaser game entities (Player, Enemy, Bullet, etc.)
-├── scenes/             # Phaser scenes (MainGame, GameOver, etc.)
-├── main.ts             # Phaser game initialization
-├── stateMachine.ts     # State machine implementation
-├── utils.ts            # Shared utilities
-└── PhaserGame.svelte   # Svelte component wrapper
-src/routes/             # SvelteKit routes
-lib/assets/             # Static assets
+```typescript
+if (newState === this.#current && !this.#states[newState].reenter) {
+  throw new Error(`[${this.#machineName}] Already on state "${newState as string}"`)
+}
 ```
 
-## Phaser Patterns
+### Game Architecture Patterns
 
-### Entity Classes
+**Phaser Scenes**: Bootloader → MainGame → PauseScreen/GameOver overlays
 
-- Extend appropriate Phaser class (Sprite, Image, Group)
-- Declare scene and body types using `declare`
-- Initialize physics in constructor with `physics.add.existing()`
-- Use state machines for entity behavior logic
+```typescript
+export class MainGame extends Scene {
+  player!: Player;
+  bullets!: Physics.Arcade.Group;
+  enemies!: Physics.Arcade.Group;
+```
 
-### State Machines
+**Entity Components**: Extend Phaser physics sprites for game entities
 
-- Use the `StateMachine` class from `src/game/stateMachine.ts`
-- Define states with `onEnter`, `onUpdate`, and `onExit` hooks
-- Use `reenter: true` to allow re-entering the same state
-- Use kebab-case for state names
+```typescript
+export class Player extends Physics.Arcade.Sprite {
+  stateMachine: StateMachine;
+  path: number[][] = [];
+  #movementSpeed = 200;
+```
 
-### Private Internal State
+**Physics Groups**: Use object pooling with Phaser groups
 
-- Use `#` prefix for private fields
-- Keep state machine logic in separate class, not mixed with rendering
+```typescript
+this.bullets = this.physics.add.group({
+  classType: Bullet,
+  collideWorldBounds: true
+});
+```
 
-### Lifecycle Methods
+### Styling
 
-- Use `init()` for setup, `preload()` for assets, `create()` for initialization
-- Implement `preUpdate(time, dt)` for per-frame logic
+- Use TailwindCSS v4 utility classes exclusively
+- Avoid custom CSS files; prefer Tailwind classes
+- Use inline styles for dynamic values only
 
-## Important Notes
+```tsx
+<div class="pointer-events-auto absolute bottom-0 bg-black h-48 flex items-center p-4 gap-2">
+  <div class="size-40 bg-neutral-400 shrink-0 rounded-lg"></div>
+</div>
+```
 
-- Always run `npm run check` to validate TypeScript before committing
-- Keep entity classes focused on single responsibility
-- Use named exports for game entities and utilities
-- No test framework exists; validate manually with `npm run dev`
-- The project uses Tailwind CSS 4 with `@tailwindcss/vite`
+### File Organization
+
+```
+src/
+├── game/
+│   ├── main.ts           # Phaser game config, StartGame function
+│   ├── stateMachine.ts   # Generic StateMachine class
+│   ├── utils.ts          # Shared utility functions
+│   └── components/       # Game entities (Player, Enemy, Bullet, etc.)
+│   └── scenes/           # Phaser scenes (Bootloader, MainGame, etc.)
+├── App.tsx               # UI overlay (HUD) using SolidJS
+├── Layout.tsx            # Game container, GameContext provider
+└── index.tsx             # App entry point
+```
+
+### Development Workflow
+
+1. Run `npm run dev` for hot-reload development
+2. Type checking runs automatically via `tsc -b` during build
+3. No lint or test framework currently configured (consider adding ESLint + Vitest)
+4. TailwindCSS v4 via `@tailwindcss/vite` plugin requires no additional config
+5. Phaser physics: zero gravity, arcade physics enabled
+
+### Common Patterns
+
+**Grid-based pathfinding**:
+```typescript
+import PF from 'pathfinding'
+const grid = new PF.Grid(GRID_WIDTH, GRID_HEIGHT);
+const path = finder.findPath(startX, startY, endX, endY, grid.clone());
+```
+
+**Chunk-based background rendering**:
+```typescript
+const chunk = this.add.image(posX, posY, chunkKey).setOrigin(0);
+chunk.setDepth(-1);
+```
+
+**Game object pooling**:
+```typescript
+const enemy = this.enemies.get(x, y) as Enemy | null;
+if (enemy) enemy.enable();
+```
