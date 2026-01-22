@@ -14,6 +14,8 @@
   let xp = $state(player.data.get(playerData.xp));
   let xpToNextLVL = $state(player.data.get(playerData.xpToNextLVL));
   let lvl = $state(player.data.get(playerData.lvl));
+  let maxMana = $state(player.maxMana);
+  let mana = $state(player.data.get(playerData.mana));
 
   player.on(playerEvents["changedata-health"], () => {
     health = player.data.get(playerData.health);
@@ -29,6 +31,10 @@
 
   player.on(playerEvents["changedata-xpToNextLVL"], () => {
     xpToNextLVL = player.data.get(playerData.xpToNextLVL);
+  });
+
+  player.on(playerEvents["changedata-mana"], () => {
+    mana = player.data.get(playerData.mana);
   });
 </script>
 
@@ -66,7 +72,10 @@
         <div
           class="w-14 h-full bg-blue-200 border-4 border-blue-500 rounded-lg flex items-end"
         >
-          <div class="bg-blue-500 w-full h-[40%]"></div>
+          <div
+            class="bg-blue-500 w-full h-[40%]"
+            style="height: {(mana * 100) / maxMana}%;"
+          ></div>
         </div>
       </div>
     </div>

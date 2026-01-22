@@ -10,7 +10,8 @@ export const { events: playerEvents, data: playerData } = createEntityDataEventM
   'health',
   'xp',
   'lvl',
-  'xpToNextLVL'
+  'xpToNextLVL',
+  'mana'
 ])
 
 export class Player extends Physics.Arcade.Sprite {
@@ -31,7 +32,6 @@ export class Player extends Physics.Arcade.Sprite {
   #skillPoints = 0
   #damage = 1
   #maxMana = 10
-  #mana = 10
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'player');
     this.scene.physics.add.existing(this);
@@ -191,6 +191,7 @@ export class Player extends Physics.Arcade.Sprite {
     this.data.set(playerData.xp, 0)
     this.data.set(playerData.lvl, 1)
     this.data.set(playerData.xpToNextLVL, 10)
+    this.data.set(playerData.mana, this.#maxMana)
   }
 
   preUpdate(time: number, dt: number) {
@@ -228,10 +229,6 @@ export class Player extends Physics.Arcade.Sprite {
 
   get maxHealth(): number {
     return this.#maxHealth;
-  }
-
-  get mana(): number {
-    return this.#mana;
   }
 
   get maxMana(): number {
