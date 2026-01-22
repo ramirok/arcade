@@ -72,20 +72,20 @@ export class Enemy extends Physics.Arcade.Sprite {
           },
           onUpdate: () => {
             const attackTargets = [this.scene.player, this.scene.castle];
-            let closestEnemy: NonNullable<AttackTarget> = this.scene.castle;
+            let closestTarget: NonNullable<AttackTarget> = this.scene.castle;
             let shortestDistance = Infinity;
             for (const possibleTarget of attackTargets) {
               const dist = PhaserMath.Distance.Between(this.x, this.y, possibleTarget.x, possibleTarget.y);
               if (dist < shortestDistance) {
                 shortestDistance = dist;
-                closestEnemy = possibleTarget;
+                closestTarget = possibleTarget;
               }
             }
-            this.#attackTarget = closestEnemy;
+            this.#attackTarget = closestTarget;
             if (shortestDistance <= this.#attackRange) {
               this.stateMachine.set('attack-prepare');
             } else if (shortestDistance <= this.#chaseRange) {
-              this.stateMachine.set('attack-move', closestEnemy);
+              this.stateMachine.set('attack-move', closestTarget);
             } else {
               this.scene.physics.moveToObject(this, this.scene.castle, this.#movementSpeed);
             }
