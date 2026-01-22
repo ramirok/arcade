@@ -233,8 +233,7 @@ export class MainGame extends Scene {
     const enemy = this.enemies.get(x, y) as Enemy | null
 
     if (enemy) {
-      enemy.setActive(true);
-      enemy.setVisible(true);
+      enemy.enable()
     }
     this.time.delayedCall(PhaserMath.Between(2000, 4000), this.#spawnEnemy, undefined, this)
   }
