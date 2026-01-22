@@ -2,7 +2,6 @@
 import { Bootloader } from "./scenes/Bootloader";
 import { MainGame } from "./scenes/MainGame";
 import { PauseScreen } from "./scenes/PauseScreen";
-import { UIScene } from "./scenes/UI";
 import { GameOver } from "./scenes/GameOver";
 import { AUTO, Game, Scale } from "phaser";
 
@@ -23,7 +22,7 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: true
     },
   },
-  scene: [Bootloader, MainGame, PauseScreen, UIScene, GameOver],
+  scene: [Bootloader, MainGame, PauseScreen, GameOver],
 };
 
 export const StartGame = (parent: string) => {
