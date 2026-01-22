@@ -124,9 +124,6 @@ export class Enemy extends Physics.Arcade.Sprite {
         'attack-prepare': {
           onEnter: () => {
             this.#attackPrepareTimer = this.#attackPrepareTimeInitial
-            if (!this.#attackTarget?.active) {
-              this.stateMachine.set('idle')
-            }
           },
           onUpdate: (dt) => {
             if (this.#attackPrepareTimer > 0) {
@@ -138,6 +135,8 @@ export class Enemy extends Physics.Arcade.Sprite {
                 bullet.enable();
                 this.scene.physics.moveToObject(bullet, this.#attackTarget, bullet.speed);
                 this.stateMachine.set('attack-backswing')
+              } else {
+                this.stateMachine.set('idle')
               }
             }
           }
