@@ -230,7 +230,7 @@ export class MainGame extends Scene {
       y = PhaserMath.Between(0, WORLD_HEIGHT);
       isInsideSafeZone = safeZone.contains(x, y);
     }
-    const enemy = this.enemies.get(x, y);
+    const enemy = this.enemies.get(x, y) as Enemy | null
 
     if (enemy) {
       enemy.setActive(true);
