@@ -218,7 +218,7 @@ export class Player extends Physics.Arcade.Sprite {
   gainXP(amount: number) {
     this.setContext('xp', prev => prev + amount)
     while (this.context.xp >= this.context.xpToNextLVL) {
-      this.setContext('lvl', (prev) => prev++)
+      this.setContext('lvl', (prev) => prev + 1)
       this.#skillPoints += 5;
       this.setContext('xpToNextLVL', (prev) => prev + Math.floor(prev * 1.5))
     }
