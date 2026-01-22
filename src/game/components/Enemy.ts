@@ -5,6 +5,7 @@ import type { Player } from "./Player";
 import type { Bullet } from "./Bullet";
 import { isWithinRange } from "../utils";
 import { Physics, Math as PhaserMath } from "phaser";
+import { createStore } from "solid-js/store";
 
 export interface EnemyConfig {
   maxHealth: number;
@@ -37,17 +38,31 @@ export class Enemy extends Physics.Arcade.Sprite {
   #chaseRange = 400
   #maxHealth = 3
   #health = 3
-  #damage = 1
   #xpValue = 1
   #maxMana = 0
   #mana = 0
+  context
+  setContext
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
 
+    const [context, setContext] = createStore({
+      maxHealth: 100,
+      health: 100,
+      lvl: 1,
+      xp: 0,
+      xpToNextLVL: 10,
+      maxMana: 10,
+      mana: 10,
+      damage: config.damage
+    });
+
+    this.context = context
+    this.setContext = setContext
+
     this.#maxHealth = config.maxHealth;
     this.#health = config.maxHealth;
-    this.#damage = config.damage;
     this.#attackRange = config.attackRange;
     this.#chaseRange = config.chaseRange;
     this.#movementSpeed = config.movementSpeed;
@@ -208,10 +223,6 @@ export class Enemy extends Physics.Arcade.Sprite {
 
   get xpValue(): number {
     return this.#xpValue;
-  }
-
-  get damage(): number {
-    return this.#damage;
   }
 
   get mana(): number {
