@@ -4,6 +4,7 @@ import type { Castle } from "./Castle";
 import type { Player } from "./Player";
 import type { Bullet } from "./Bullet";
 import { isWithinRange } from "../utils";
+import { HealthBar } from "./HealthBar";
 import { Physics, Math as PhaserMath } from "phaser";
 import { createStore } from "solid-js/store";
 
@@ -73,6 +74,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#maxMana = config.maxMana;
     this.#mana = config.maxMana;
 
+    new HealthBar(this);
     this.setInteractive()
     this.scene.physics.add.existing(this)
 
