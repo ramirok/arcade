@@ -151,7 +151,7 @@ export class MainGame extends Scene {
       const bullet = bulletObj as Bullet;
       const enemy = enemyObj as Enemy;
       if (bullet.active && enemy.active && bullet.ownerEntity instanceof Player) {
-        const damage = bullet.ownerEntity.data.get('damage');
+        const damage = bullet.ownerEntity.data.get('attributeDamage');
         enemy.takeDamage(damage);
         bullet.disable();
       }
