@@ -3,7 +3,7 @@ import { Castle } from "../components/Castle";
 import { Enemy, Slime } from "../components/Enemy";
 import { Player } from "../components/Player";
 import { Bullet } from "../components/Bullet";
-import { getCellFromPixel } from "../utils";
+import { getCellFromPixel, type DataOverride } from "../utils";
 import PF from 'pathfinding'
 import { GameObjects, Geom, Input, Math as PhaserMath, Physics, Scene } from "phaser";
 
@@ -13,7 +13,13 @@ export const GRID_CELL_SIZE = 30
 export const GRID_WIDTH = WORLD_WIDTH / GRID_CELL_SIZE
 export const GRID_HEIGHT = WORLD_HEIGHT / GRID_CELL_SIZE
 
+type SceneData = {
+  showHealthBars: boolean
+}
+
 export class MainGame extends Scene {
+  declare data: DataOverride<MainGame, SceneData>
+
   //create
   player!: Player;
   castle!: Castle
@@ -58,6 +64,8 @@ export class MainGame extends Scene {
   create() {
     console.log('MainGame create');
 
+    this.data.set('showHealthBars', false)
+
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
@@ -100,6 +108,13 @@ export class MainGame extends Scene {
         }
       }
     });
+
+    this.input.keyboard!.on('keydown-ALT', () => {
+      this.data.set('showHealthBars', true)
+    })
+    this.input.keyboard!.on('keyup-ALT', () => {
+      this.data.set('showHealthBars', false)
+    })
 
     this.bullets = this.physics.add.group({
       classType: Bullet,

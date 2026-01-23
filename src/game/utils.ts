@@ -22,18 +22,39 @@ export const isWithinRange = (x1: number, y1: number, x2: number, y2: number, ra
   return distanceToTarget < range
 }
 
-export const createEntityDataEventMap = <T extends string>(keys: T[]) => {
-  const data = {} as { [P in T]: P };
+// export const createEntityDataEventMap = <Data extends Record<string, any>>(keys: (keyof Data)[]) => {
+//   const data = {} as { [P in keyof Data]: P };
+//
+//   type EventMap = { [K in Extract<keyof Data, string> as `changedata-${K}`]: `changedata-${K}` } &
+//   { 'changedata': 'changedata' } &
+//   { 'setdata': 'setdata' } &
+//   { 'destroy': 'destroy' } &
+//   { 'removedata': 'removedata' }
+//
+//   const events = {} as EventMap;
+//
+//   for (const key of keys) {
+//     data[key] = key;
+//     const eventName = `changedata-${key as string}` as keyof EventMap;
+//     events[eventName] = eventName as EventMap[typeof eventName];
+//   }
+//   events['changedata'] = "changedata";
+//   events['setdata'] = "setdata";
+//   events['destroy'] = "destroy";
+//   events['removedata'] = "removedata";
+//
+//   return { data, events };
+// };
 
-  type EventMap = { [K in T as `changedata-${K}`]: `changedata-${K}` };
-  const events = {} as EventMap;
-
-  for (const key of keys) {
-    data[key] = key;
-
-    const eventName = `changedata-${key}` as keyof EventMap;
-    events[eventName] = eventName as EventMap[typeof eventName];
+export type DataOverride<Entity, Data> = Omit<Phaser.Data.DataManager, 'set' | 'get' | 'inc' | 'events'> & {
+  set: <T extends keyof Data>(dataKey: T, data: Data[T]) => Phaser.Data.DataManager
+  get: <T extends keyof Data>(dataKey: T) => Data[T]
+  inc: <T extends keyof Data>(dataKey: T, amount: number) => Phaser.Data.DataManager
+  events: Omit<Phaser.Events.EventEmitter, 'on'> & {
+    on: {
+      <T extends keyof Data>(event: `changedata-${keyof Data & string}`, cb: (entity: Entity, newData: Data[T], oldData: Data[T]) => void): Phaser.Events.EventEmitter;
+      <T extends keyof Data>(event: 'changedata', cb: (entity: Entity, dataKey: T, newData: Data[T], oldData: Data[T]) => void): Phaser.Events.EventEmitter;
+      <T extends keyof Data>(event: 'setdata' | 'removedata', cb: (entity: Entity, dataKey: T, data: Data[T]) => void): Phaser.Events.EventEmitter;
+    }
   }
-
-  return { data, events };
-};
+}

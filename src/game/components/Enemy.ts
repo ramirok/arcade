@@ -3,10 +3,10 @@ import { StateMachine } from "../stateMachine";
 import type { Castle } from "./Castle";
 import type { Player } from "./Player";
 import type { Bullet } from "./Bullet";
-import { isWithinRange } from "../utils";
 import { HealthBar } from "./HealthBar";
+import { isWithinRange, type DataOverride } from "../utils";
 import { Physics, Math as PhaserMath } from "phaser";
-import { createStore } from "solid-js/store";
+
 
 export interface EnemyConfig {
   maxHealth: number;
@@ -21,10 +21,17 @@ export interface EnemyConfig {
   maxMana: number;
 }
 
+type EnemyData = {
+  health: number
+  maxHealth: number
+  damage: number
+}
+
 type AttackTarget = Player | Castle | null
 export class Enemy extends Physics.Arcade.Sprite {
   declare body: Physics.Arcade.Body;
   declare scene: MainGame;
+  declare data: DataOverride<Enemy, EnemyData>
   id = crypto.randomUUID()
   stateMachine
   #attackTarget: AttackTarget = null
@@ -37,33 +44,18 @@ export class Enemy extends Physics.Arcade.Sprite {
   #attackBackswingTimer = 500
   #movementSpeed = 100
   #chaseRange = 400
-  #maxHealth = 3
-  #health = 3
   #xpValue = 1
   #maxMana = 0
   #mana = 0
-  context
-  setContext
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
 
-    const [context, setContext] = createStore({
-      maxHealth: 100,
-      health: 100,
-      lvl: 1,
-      xp: 0,
-      xpToNextLVL: 10,
-      maxMana: 10,
-      mana: 10,
-      damage: config.damage
-    });
+    this.setDataEnabled()
+    this.data.set('health', config.maxHealth)
+    this.data.set('maxHealth', config.maxHealth)
+    this.data.set('damage', config.damage)
 
-    this.context = context
-    this.setContext = setContext
-
-    this.#maxHealth = config.maxHealth;
-    this.#health = config.maxHealth;
     this.#attackRange = config.attackRange;
     this.#chaseRange = config.chaseRange;
     this.#movementSpeed = config.movementSpeed;
@@ -218,7 +210,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.setVisible(true)
     this.setAlpha(1)
     this.body.setEnable(true)
-    this.#health = this.#maxHealth
+    this.data.set('health', this.data.get('maxHealth'))
     this.#mana = this.#maxMana
     this.stateMachine.reset()
   }
@@ -236,14 +228,14 @@ export class Enemy extends Physics.Arcade.Sprite {
   }
 
   takeDamage(amount: number) {
-    this.#health -= amount;
+    this.data.inc('health', -amount)
     this.setTint(0xff0000);
     this.scene.tweens.add({
       targets: this,
       duration: 150,
       onComplete: () => this.clearTint()
     });
-    if (this.#health <= 0) {
+    if (this.data.get('health') <= 0) {
       this.stateMachine.set('dead');
     }
   }
