@@ -8,11 +8,6 @@ export class Bullet extends GameObjects.Rectangle {
   speed = 600
   ownerEntity: Player | Enemy | null = null
 
-  get owner(): 'player' | 'enemy' {
-    if (this.ownerEntity instanceof Player) return 'player';
-    return 'enemy';
-  }
-
   constructor(scene: Scene, x: number, y: number) {
     super(scene, x, y, 20, 20, 0x0000ff);
 

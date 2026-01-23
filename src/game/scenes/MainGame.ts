@@ -130,8 +130,8 @@ export class MainGame extends Scene {
     this.physics.add.overlap(this.bullets, this.enemies, (bulletObj, enemyObj) => {
       const bullet = bulletObj as Bullet;
       const enemy = enemyObj as Enemy;
-      if (bullet.active && enemy.active && bullet.owner === 'player') {
-        const damage = bullet.ownerEntity?.context.damage ?? 1;
+      if (bullet.active && enemy.active && bullet.ownerEntity instanceof Player) {
+        const damage = bullet.ownerEntity.data.get('damage');
         enemy.takeDamage(damage);
         bullet.disable();
       }
@@ -140,8 +140,8 @@ export class MainGame extends Scene {
     this.physics.add.overlap(this.player, this.bullets, (playerObj, bulletObj) => {
       const player = playerObj as Player;
       const bullet = bulletObj as Bullet;
-      if (bullet.active && bullet.owner === 'enemy') {
-        const damage = bullet.ownerEntity?.context.damage ?? 1;
+      if (bullet.active && bullet.ownerEntity instanceof Enemy) {
+        const damage = bullet.ownerEntity.data.get('damage');
         player.takeDamage(damage);
         bullet.disable();
       }
@@ -150,8 +150,8 @@ export class MainGame extends Scene {
     this.physics.add.overlap(this.castle, this.bullets, (castleObj, bulletObj) => {
       const castle = castleObj as Castle;
       const bullet = bulletObj as Bullet;
-      if (bullet.active && bullet.owner === 'enemy') {
-        const damage = bullet.ownerEntity?.context.damage ?? 1;
+      if (bullet.active && bullet.ownerEntity instanceof Enemy) {
+        const damage = bullet.ownerEntity.data.get('damage');
         castle.takeDamage(damage);
         bullet.disable();
       }
