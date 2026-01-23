@@ -228,7 +228,10 @@ export class Enemy extends Physics.Arcade.Sprite {
   }
 
   takeDamage(amount: number) {
-    this.data.inc('health', -amount)
+    const criticalChange = this.scene.player.data.get('attributeCriticalChance')
+    const isCritical = Math.random() < criticalChange
+    const damageAmount = isCritical ? amount * 2 : amount
+    this.data.inc('health', -damageAmount)
     this.setTint(0xff0000);
     this.scene.tweens.add({
       targets: this,
