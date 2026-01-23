@@ -15,6 +15,7 @@ export const GRID_HEIGHT = WORLD_HEIGHT / GRID_CELL_SIZE
 
 type SceneData = {
   showHealthBars: boolean
+  charStatsOpen: boolean
 }
 
 export class MainGame extends Scene {
@@ -65,6 +66,7 @@ export class MainGame extends Scene {
     console.log('MainGame create');
 
     this.data.set('showHealthBars', false)
+    this.data.set('charStatsOpen', false)
 
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
@@ -114,6 +116,9 @@ export class MainGame extends Scene {
     })
     this.input.keyboard!.on('keyup-ALT', () => {
       this.data.set('showHealthBars', false)
+    })
+    this.input.keyboard!.on('keydown-C', () => {
+      this.data.toggle('charStatsOpen')
     })
 
     this.bullets = this.physics.add.group({
