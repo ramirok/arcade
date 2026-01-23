@@ -6,16 +6,32 @@ import { getPixelPosition, isWithinRange, type DataOverride } from "../utils";
 import { Math as PhaserMath, Physics } from "phaser";
 
 
-type PlayerData = {
-  damage: number
-  agility: number
+export type PlayerData = {
+  statStrength: number
+  statAgility: number
+  statVitality: number
+  statEnergy: number
+
+  attributeDamage: number
+  attributeCriticalChance: number
+
+  attributeAttackSpeed: number
+  attributeEvasion: number
+
+  attributeMaxMana: number
+  attributeManaRegen: number
+  attributeMagicDamage: number
+
+  attributeMaxHealth: number
+  attributeHealthRegen: number
+  attributeDefense: number
+
   health: number;
-  maxHealth: number;
-  maxMana: number
   mana: number
   lvl: number
   xp: number
   xpToNextLVL: number
+  skillPoints: number
 }
 
 export class Player extends Physics.Arcade.Sprite {
@@ -33,20 +49,41 @@ export class Player extends Physics.Arcade.Sprite {
   #attackBackswingTimer = 500
   #recalculateAttackMoveTimeInitial = 200
   #recalculateAttackMoveTimer = 0
-  #skillPoints = 0
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
 
     this.setDataEnabled()
-    this.data.set('health', 10)
-    this.data.set('maxHealth', 10)
-    this.data.set('lvl', 1)
-    this.data.set('xp', 0)
-    this.data.set('xpToNextLVL', 10)
-    this.data.set('maxMana', 10)
-    this.data.set('mana', 10)
-    this.data.set('damage', 1)
+    const maxMana = PhaserMath.Between(5, 10);
+    const maxHealth = PhaserMath.Between(5, 15);
+    this.data.set({
+      health: maxHealth,
+      mana: maxMana,
+      lvl: 1,
+      xp: 0,
+      xpToNextLVL: 10,
+      skillPoints: 10,
+
+      statEnergy: 1,
+      statAgility: 1,
+      statStrength: 1,
+      statVitality: 1,
+
+      attributeDamage: PhaserMath.Between(1, 4),
+      attributeCriticalChance: PhaserMath.FloatBetween(.01, .06),
+
+      attributeAttackSpeed: PhaserMath.FloatBetween(.01, 0.04),
+      attributeEvasion: PhaserMath.FloatBetween(.01, .04),
+
+      attributeMaxMana: maxMana,
+      attributeManaRegen: PhaserMath.Between(1, 2),
+      attributeMagicDamage: PhaserMath.Between(3, 6),
+
+      attributeMaxHealth: maxHealth,
+      attributeHealthRegen: PhaserMath.Between(1, 3),
+      attributeDefense: PhaserMath.Between(0, 2),
+    })
+
 
     this.scene.physics.add.existing(this);
     this.scene.add.existing(this);
@@ -151,7 +188,7 @@ export class Player extends Physics.Arcade.Sprite {
           },
           onUpdate: (dt) => {
             if (this.#attackPrepareTimer > 0) {
-              this.#attackPrepareTimer -= dt
+              this.#attackPrepareTimer -= dt * (this.data.get('attributeAttackSpeed') + 1)
             } else {
               if (this.attackTarget?.active) {
                 const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
@@ -171,7 +208,7 @@ export class Player extends Physics.Arcade.Sprite {
           },
           onUpdate: (dt) => {
             if (this.#attackBackswingTimer > 0) {
-              this.#attackBackswingTimer -= dt
+              this.#attackBackswingTimer -= dt * (this.data.get('attributeAttackSpeed') + 1)
             } else {
               if (this.attackTarget?.active) {
                 const withinRange = isWithinRange(this.x, this.y, this.attackTarget.x, this.attackTarget.y, this.#attackRange)
@@ -200,15 +237,22 @@ export class Player extends Physics.Arcade.Sprite {
       }
     })
     this.stateMachine.start()
-    this.setDataEnabled();
+
   }
 
   preUpdate(time: number, dt: number) {
+    console.log(this.data.get('mana'), this.data.get('attributeMaxMana'));
+
+
     super.preUpdate(time, dt)
     this.stateMachine.update(dt)
   }
 
   takeDamage(amount: number) {
+    const evasionRoll = Math.random();
+    if (evasionRoll < this.data.get('attributeEvasion')) {
+      return
+    }
     this.data.inc('health', -amount)
     this.scene.cameras.main.shake(100, 0.003);
     this.setTint(0xff0000);
@@ -227,7 +271,7 @@ export class Player extends Physics.Arcade.Sprite {
     this.data.inc('xp', amount)
     while (this.data.get('xp') >= this.data.get('xpToNextLVL')) {
       this.data.inc('lvl', 1)
-      this.#skillPoints += 5;
+      this.data.inc('skillPoints', 5)
       this.data.inc('xp', -this.data.get('xpToNextLVL'))
       this.data.inc('xpToNextLVL', Math.floor(this.data.get('xpToNextLVL') * 1.5))
     }
