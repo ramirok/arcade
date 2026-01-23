@@ -49,6 +49,8 @@ export class Player extends Physics.Arcade.Sprite {
   #attackBackswingTimer = 500
   #recalculateAttackMoveTimeInitial = 200
   #recalculateAttackMoveTimer = 0
+  #lastHitTime = 0
+  #REGEN_DELAY = 5000
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
@@ -243,6 +245,28 @@ export class Player extends Physics.Arcade.Sprite {
   preUpdate(time: number, dt: number) {
     super.preUpdate(time, dt)
     this.stateMachine.update(dt)
+
+    if (this.stateMachine.is('dead')) return
+
+    if (this.scene.time.now - this.#lastHitTime < this.#REGEN_DELAY) return
+
+    // Health Regeneration
+    const health = this.data.get('health');
+    const maxHealth = this.data.get('attributeMaxHealth');
+    if (health < maxHealth) {
+      const regen = this.data.get('attributeHealthRegen');
+      const newHealth = Math.min(maxHealth, health + (regen * dt) / 1000);
+      this.data.set('health', newHealth);
+    }
+
+    // Mana Regeneration
+    const mana = this.data.get('mana');
+    const maxMana = this.data.get('attributeMaxMana');
+    if (mana < maxMana) {
+      const regen = this.data.get('attributeManaRegen');
+      const newMana = Math.min(maxMana, mana + (regen * dt) / 1000);
+      this.data.set('mana', newMana);
+    }
   }
 
   takeDamage(amount: number) {
@@ -253,8 +277,8 @@ export class Player extends Physics.Arcade.Sprite {
 
     const defense = this.data.get('attributeDefense');
     const finalDamage = Math.max(1, amount - defense);
-    console.log(amount, finalDamage);
 
+    this.#lastHitTime = this.scene.time.now;
 
     this.data.inc('health', -finalDamage)
     this.scene.cameras.main.shake(100, 0.003);
