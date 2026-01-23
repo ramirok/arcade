@@ -24,8 +24,6 @@ export function Index() {
 
 
   player.data.events.on('changedata', (_, dataKey, data) => {
-    console.log(dataKey);
-
     if (dataKey in store) {
       setStore(dataKey as keyof typeof store, data)
     }

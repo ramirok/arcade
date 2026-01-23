@@ -241,9 +241,6 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   preUpdate(time: number, dt: number) {
-    console.log(this.data.get('mana'), this.data.get('attributeMaxMana'));
-
-
     super.preUpdate(time, dt)
     this.stateMachine.update(dt)
   }
