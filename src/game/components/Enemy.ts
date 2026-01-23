@@ -249,7 +249,7 @@ export class Slime extends Enemy {
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime', {
       maxHealth: 10,
-      damage: 1,
+      damage: 3,
       attackRange: 200,
       chaseRange: 400,
       movementSpeed: 100,

@@ -250,7 +250,13 @@ export class Player extends Physics.Arcade.Sprite {
     if (evasionRoll < this.data.get('attributeEvasion')) {
       return
     }
-    this.data.inc('health', -amount)
+
+    const defense = this.data.get('attributeDefense');
+    const finalDamage = Math.max(1, amount - defense);
+    console.log(amount, finalDamage);
+
+
+    this.data.inc('health', -finalDamage)
     this.scene.cameras.main.shake(100, 0.003);
     this.setTint(0xff0000);
     this.scene.tweens.add({
