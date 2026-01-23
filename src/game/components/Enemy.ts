@@ -248,7 +248,7 @@ export class Enemy extends Physics.Arcade.Sprite {
 export class Slime extends Enemy {
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime', {
-      maxHealth: 3,
+      maxHealth: 10,
       damage: 1,
       attackRange: 200,
       chaseRange: 400,
