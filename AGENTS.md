@@ -92,3 +92,9 @@ export class MyEntity extends Physics.Arcade.Sprite {
 - **Performance**: Minimize allocations in the `update()` loop.
 - **Clean Scenes**: Keep `MainGame.ts` focused on orchestration (collisions, groups, world setup). Move entity-specific logic into component classes.
 - **Reactivity**: Leverage SolidJS's fine-grained reactivity for the UI to avoid unnecessary re-renders of the game canvas.
+
+---
+
+## 🚫 Workflow Restrictions
+- **No Git Commits**: Agentic assistants must **NEVER** execute `git commit` or `git push`.
+- **User Review**: All code changes must be left in the working directory (staged or unstaged) for manual review and commitment by the user.
