@@ -177,13 +177,13 @@ export class Enemy extends Physics.Arcade.Sprite {
         dead: {
           onEnter: () => {
             this.body.setEnable(false);
+            this.scene.player.gainXP(this.#xpValue);
             this.scene.tweens.add({
               targets: this,
               alpha: 0,
               duration: 300,
               onComplete: () => {
                 this.disable();
-                this.scene.player.gainXP(this.#xpValue);
               }
             });
           }
