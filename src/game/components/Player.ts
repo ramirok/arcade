@@ -24,7 +24,6 @@ export class Player extends Physics.Arcade.Sprite {
   context
   setContext
   constructor(scene: MainGame, x: number, y: number) {
-    super(scene, x, y, 'player');
 
     const [context, setContext] = createStore({
       maxHealth: 100,
@@ -36,6 +35,7 @@ export class Player extends Physics.Arcade.Sprite {
       mana: 10,
       damage: 1
     });
+    super(scene, x, y, 'slime');
 
     this.context = context
     this.setContext = setContext
@@ -56,7 +56,7 @@ export class Player extends Physics.Arcade.Sprite {
 
     this.anims.create({
       key: 'idle',
-      frames: this.anims.generateFrameNumbers('player'),
+      frames: this.anims.generateFrameNumbers('slime'),
       duration: 500,
       repeat: -1
     });
