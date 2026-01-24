@@ -4,7 +4,7 @@ import { StartGame } from './game/main';
 import type { Game } from 'phaser';
 
 
-export const GameContext = createContext<Accessor<Game | null>>();
+const GameContext = createContext<Accessor<Game | null>>();
 export function useGame() {
   const context = useContext(GameContext);
   if (!context) {
@@ -12,7 +12,6 @@ export function useGame() {
   }
   return context as Accessor<Game>;
 }
-
 const Layout: ParentComponent = (props) => {
 
   const gameCointainerId = "game-container";
@@ -21,7 +20,7 @@ const Layout: ParentComponent = (props) => {
   onMount(() => {
     const game = StartGame(gameCointainerId);
     game.events.on("main-scene-ready", () => {
-      setGameRef(game)
+      setGameRef({ ...game } as Game)
     });
   })
 
@@ -32,7 +31,7 @@ const Layout: ParentComponent = (props) => {
         class="relative w-screen h-screen flex items-center justify-center"
       >
         <div id={gameCointainerId}></div>
-        <Show when={gameRef()}>
+        <Show when={gameRef()} keyed>
           <div class="absolute inset-0 pointer-events-none">
             {props.children}
           </div>

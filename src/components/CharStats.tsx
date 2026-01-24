@@ -103,13 +103,13 @@ export const CharStats: Component = () => {
   })
   const [skillPoints, setSkillPoints] = createSignal(player.data.get('skillPoints'))
 
-  player.data.events.on('changedata', (_, data, value) => {
-    if (data === 'skillPoints') {
-      setSkillPoints(value)
-    } else if (data in stats) {
-      setStats(data as keyof Stats, value)
-    } else if (data in attributes) {
-      setAttributes(data as keyof Attributes, value)
+  player.data.events.on('changedata', (_, dataKey, data) => {
+    if (dataKey === 'skillPoints') {
+      setSkillPoints(data)
+    } else if (dataKey in stats) {
+      setStats(dataKey as keyof Stats, data)
+    } else if (dataKey in attributes) {
+      setAttributes(dataKey as keyof Attributes, data)
     }
   })
 
