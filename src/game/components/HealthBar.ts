@@ -1,6 +1,6 @@
 import { GameObjects, Math as PhaserMath } from "phaser";
 import type { Enemy } from "./Enemy";
-import type { MainGame } from "../scenes/MainGame";
+import { MainGame } from "../scenes/MainGame";
 
 export class HealthBar extends GameObjects.Container {
   declare scene: MainGame
@@ -22,26 +22,41 @@ export class HealthBar extends GameObjects.Container {
     this.#offsetY = offsetY;
 
     this.add([this.#background, this.#healthFill]);
-    this.setVisible(false)
+    this.setVisible(this.scene.data.get('showHealthBars'))
     enemy.scene.add.existing(this);
 
-    this.scene.data.events.on('changedata-showHealthBars', (_, val) => {
+
+    const handleShowHealthBars = (_: any, val: boolean) => {
       if (!this.#pointerOver && this.active) {
         this.setVisible(val)
       }
-    })
-    enemy.on('pointerover', () => {
+    }
+    const handlePointerOver = () => {
       this.#pointerOver = true
       this.setVisible(true)
-    });
-    enemy.on('pointerout', () => {
+    }
+    const handlePointerOut = () => {
       this.#pointerOver = false
       if (!this.scene.data.get('showHealthBars')) {
         this.setVisible(false)
       }
-    });
-    enemy.data.events.on('changedata-health', () => {
-      this.updateHealth(enemy.data.get('health'), enemy.data.get('maxHealth'))
+    }
+    const handleHealthUpdate = () => {
+      this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'))
+    }
+
+    this.scene.data.events.on('changedata-showHealthBars', handleShowHealthBars)
+    enemy.data.events.on('changedata-health', handleHealthUpdate)
+    enemy.data.events.on('changedata-maxHealth', handleHealthUpdate)
+    enemy.on('pointerout', handlePointerOut);
+    enemy.on('pointerover', handlePointerOver);
+
+    this.once('destroy', () => {
+      this.scene.events.off('changedata-showHealthBars', handleShowHealthBars)
+      enemy.data.events.off('changedata-health', handleHealthUpdate)
+      enemy.data.events.off('changedata-maxHealth', handleHealthUpdate)
+      enemy.off('pointerout', handlePointerOut);
+      enemy.off('pointerover', handlePointerOver);
     })
   }
 
@@ -65,5 +80,7 @@ export class HealthBar extends GameObjects.Container {
     this.x = this.#enemy.x;
     this.y = this.#enemy.y + this.#offsetY;
     this.setActive(true);
+    this.setVisible(this.scene.data.get('showHealthBars') || this.#pointerOver)
+    this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'))
   }
 }
