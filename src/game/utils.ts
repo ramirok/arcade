@@ -60,6 +60,7 @@ export type DataOverride<Entity, Data> = Omit<Phaser.Data.DataManager, 'set' | '
       <T extends keyof Data>(event: `changedata-${keyof Data & string}`, cb: (entity: Entity, newData: Data[T], oldData: Data[T]) => void): Phaser.Events.EventEmitter;
       <T extends keyof Data>(event: 'changedata', cb: (entity: Entity, dataKey: T, newData: Data[T], oldData: Data[T]) => void): Phaser.Events.EventEmitter;
       <T extends keyof Data>(event: 'setdata' | 'removedata', cb: (entity: Entity, dataKey: T, data: Data[T]) => void): Phaser.Events.EventEmitter;
-    }
+    },
+    off: (event: `changedata-${keyof Data & string}`, cb: () => void) => Phaser.Events.EventEmitter
   }
 }
