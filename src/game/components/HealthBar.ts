@@ -51,7 +51,7 @@ export class HealthBar extends GameObjects.Container {
     enemy.on('pointerout', handlePointerOut);
     enemy.on('pointerover', handlePointerOver);
 
-    this.once('destroy', () => {
+    enemy.once('destroy', () => {
       this.scene.events.off('changedata-showHealthBars', handleShowHealthBars)
       enemy.data.events.off('changedata-health', handleHealthUpdate)
       enemy.data.events.off('changedata-maxHealth', handleHealthUpdate)
