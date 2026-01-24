@@ -45,7 +45,7 @@ export class HealthBar extends GameObjects.Container {
     })
   }
 
-  updateHealth(current: number, max: number): void {
+  updateHealth(current: number, max: number) {
     const percent = PhaserMath.Clamp(current / max, 0, 1);
     this.#healthFill.width = (this.#healthWidth - 2) * percent;
     this.#healthFill.fillColor = percent > 0.5 ? 0x00ff00 : percent > 0.25 ? 0xffff00 : 0xff0000;
