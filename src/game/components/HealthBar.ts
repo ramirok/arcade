@@ -43,9 +43,6 @@ export class HealthBar extends GameObjects.Container {
     enemy.data.events.on('changedata-health', () => {
       this.updateHealth(enemy.data.get('health'), enemy.data.get('maxHealth'))
     })
-    enemy.on('', () => {
-      console.log('DEAD!!');
-    })
   }
 
   updateHealth(current: number, max: number): void {
