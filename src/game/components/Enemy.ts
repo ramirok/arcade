@@ -243,6 +243,8 @@ export class Enemy extends Physics.Arcade.Sprite {
     });
     if (this.data.get('health') <= 0) {
       this.stateMachine.set('dead');
+    } else if (this.#attackTarget === this.scene.castle) {
+      this.stateMachine.set('attack-move', this.scene.player);
     }
   }
 }
