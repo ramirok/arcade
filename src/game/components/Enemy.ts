@@ -47,6 +47,7 @@ export class Enemy extends Physics.Arcade.Sprite {
   #xpValue = 1
   #maxMana = 0
   #mana = 0
+  #healthBar
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
@@ -66,7 +67,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#maxMana = config.maxMana;
     this.#mana = config.maxMana;
 
-    new HealthBar(this);
+    this.#healthBar = new HealthBar(this);
     this.setInteractive()
     this.scene.physics.add.existing(this)
 
@@ -203,6 +204,7 @@ export class Enemy extends Physics.Arcade.Sprite {
   disable() {
     this.setActive(false);
     this.setVisible(false)
+    this.#healthBar.disable()
   }
 
   enable() {
@@ -213,6 +215,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.data.set('health', this.data.get('maxHealth'))
     this.#mana = this.#maxMana
     this.stateMachine.reset()
+    this.#healthBar.enable()
   }
 
   get xpValue(): number {

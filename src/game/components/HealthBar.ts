@@ -26,7 +26,7 @@ export class HealthBar extends GameObjects.Container {
     enemy.scene.add.existing(this);
 
     this.scene.data.events.on('changedata-showHealthBars', (_, val) => {
-      if (!this.#pointerOver) {
+      if (!this.#pointerOver && this.active) {
         this.setVisible(val)
       }
     })
@@ -56,4 +56,14 @@ export class HealthBar extends GameObjects.Container {
     this.y = this.#enemy.y + this.#offsetY;
   }
 
+  disable() {
+    this.setActive(false);
+    this.setVisible(false)
+  }
+
+  enable() {
+    this.x = this.#enemy.x;
+    this.y = this.#enemy.y + this.#offsetY;
+    this.setActive(true);
+  }
 }
