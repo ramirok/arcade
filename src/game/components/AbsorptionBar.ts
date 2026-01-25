@@ -78,7 +78,7 @@ export class AbsorptionBar extends GameObjects.Container {
 
   updateProgress(timer: number, duration: number) {
     const percent = PhaserMath.Clamp((duration - timer) / duration, 0, 1);
-    this.#fill.width = (this.#width - 2) * percent;
+    this.#fill.width = PhaserMath.Clamp((this.#width - 2) * percent, 1, this.#width - 2);
   }
 
   #animateIn() {
