@@ -34,9 +34,6 @@ export type PlayerData = {
   skillPoints: number
 }
 
-// const ABSORPTION_RANGE = 100
-// const ABSORPTION_DURATION = 3000
-
 export class Player extends Physics.Arcade.Sprite {
   declare scene: MainGame
   declare body: Physics.Arcade.Body;
@@ -53,8 +50,7 @@ export class Player extends Physics.Arcade.Sprite {
   #recalculateAttackMoveTimeInitial = 200
   #recalculateAttackMoveTimer = 0
   #lastHitTime = 0
-  #REGEN_DELAY = 5000
-  // #absorptionTimer = 0
+  #regenDelay = 5000
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
@@ -257,7 +253,7 @@ export class Player extends Physics.Arcade.Sprite {
 
     // this.#updateAbsorption(dt)
 
-    if (this.scene.time.now - this.#lastHitTime < this.#REGEN_DELAY) return
+    if (this.scene.time.now - this.#lastHitTime < this.#regenDelay) return
 
     // Health Regeneration
     const health = this.data.get('health');
@@ -312,42 +308,4 @@ export class Player extends Physics.Arcade.Sprite {
       this.data.inc('xpToNextLVL', Math.floor(this.data.get('xpToNextLVL') * 1.5))
     }
   }
-
-  // #updateAbsorption(dt: number) {
-  //   const enemies = this.scene.enemies.getMatching('active', true) as Enemy[];
-  //   const corpses = enemies.filter(e => e.stateMachine.is('corpse'));
-  //
-  //   let nearestCorpse: Enemy | null = null;
-  //   let shortestDistance = Infinity;
-  //
-  //   for (const corpse of corpses) {
-  //     const dist = PhaserMath.Distance.Between(this.x, this.y, corpse.x, corpse.y);
-  //     if (dist < shortestDistance) {
-  //       shortestDistance = dist;
-  //       nearestCorpse = corpse;
-  //     }
-  //   }
-  //
-  //   if (!nearestCorpse || shortestDistance > ABSORPTION_RANGE) {
-  //     this.#absorptionTimer = 0;
-  //     return;
-  //   }
-  //
-  //   this.#absorptionTimer += dt;
-  //   nearestCorpse.setAbsorptionTimer(this.#absorptionTimer);
-  //
-  //   if (this.#absorptionTimer >= ABSORPTION_DURATION) {
-  //     this.absorbCorpse(nearestCorpse);
-  //   }
-  // }
-
-  // absorbCorpse(enemy: Enemy) {
-  //   const attributes = enemy.getBoostableAttributes();
-  //   const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
-  //   const boostAmount = 1;
-  //   this.data.inc(randomAttribute as any, boostAmount);
-  //   enemy.disable();
-  //   // this.#absorptionTimer = 0;
-  // }
-
 }
