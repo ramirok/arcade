@@ -113,15 +113,11 @@ export class AbsorptionBar extends GameObjects.Container {
   enable() {
     this.x = this.#enemy.x;
     this.y = this.#enemy.y + this.#offsetY;
-    console.log(this.y);
-
     this.setActive(true);
     this.updateProgress(this.#duration, this.#duration);
     const shouldShow = this.scene.data.get('showBars') || this.#pointerOver;
     if (shouldShow) {
       this.y -= 8
-      console.log(this.y);
-
       this.scene.tweens.add({
         targets: this,
         y: this.y + 8,
