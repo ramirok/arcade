@@ -17,15 +17,16 @@ export class AbsorptionBar extends GameObjects.Container {
   #enemy;
   #pointerOver = false
   #timer = 0;
-  #duration = 3000;
+  #duration
 
-  constructor(enemy: Enemy, width = 50, height = 6, offsetY = -30) {
+  constructor(enemy: Enemy, absorptionDuration: number, width = 50, height = 6, offsetY = -30) {
     super(enemy.scene, enemy.x, enemy.y);
     this.#enemy = enemy;
     this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000);
-    this.#fill = new GameObjects.Rectangle(enemy.scene, 0, 0, width - 2, height - 2, 0x9b59b6);
+    this.#fill = new GameObjects.Rectangle(enemy.scene, -width / 2 + 1, 0, 0, height - 2, 0x9b59b6);
     this.#width = width;
     this.#offsetY = offsetY;
+    this.#duration = absorptionDuration
 
     this.setDataEnabled()
     this.data.set('absorbing', false)
@@ -75,8 +76,7 @@ export class AbsorptionBar extends GameObjects.Container {
 
   updateProgress(timer: number, duration: number) {
     this.#timer = timer;
-    this.#duration = duration;
-    const percent = PhaserMath.Clamp(timer / duration, 0, 1);
+    const percent = PhaserMath.Clamp((duration - timer) / duration, 0, 1);
     this.#fill.width = (this.#width - 2) * percent;
   }
 
@@ -90,7 +90,6 @@ export class AbsorptionBar extends GameObjects.Container {
     this.y = this.#enemy.y + this.#offsetY;
     this.setActive(true);
     this.setVisible(this.scene.data.get('showBars'))
-    this.updateProgress(this.#timer, this.#duration);
+    this.updateProgress(this.#duration, this.#duration);
   }
-
 }

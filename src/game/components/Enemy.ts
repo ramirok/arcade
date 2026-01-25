@@ -75,7 +75,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#mana = config.maxMana;
 
     this.#healthBar = new HealthBar(this);
-    this.#absorptionBar = new AbsorptionBar(this)
+    this.#absorptionBar = new AbsorptionBar(this, this.#absorptionTimeInitial)
     this.setInteractive()
     this.scene.physics.add.existing(this)
 
