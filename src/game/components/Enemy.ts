@@ -276,18 +276,6 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#absorptionTimer = 0;
   }
 
-  get xpValue(): number {
-    return this.#xpValue;
-  }
-
-  get mana(): number {
-    return this.#mana;
-  }
-
-  get maxMana(): number {
-    return this.#maxMana;
-  }
-
   takeDamage(amount: number) {
     const criticalChange = this.scene.player.data.get('attributeCriticalChance')
     const isCritical = Math.random() < criticalChange
