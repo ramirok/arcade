@@ -109,6 +109,9 @@ export class MainGame extends Scene {
           if (currentlyOver[0].stateMachine.is('corpse')) {
             const playerCell = getCellFromPixel(this.player.x, this.player.y)
             const targetCell = getCellFromPixel(pointerEvent.worldX, pointerEvent.worldY)
+            if (playerCell.cellX === targetCell.cellX && playerCell.cellY === targetCell.cellY) {
+              return
+            }
             const path = finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, grid.clone());
             if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
               path.shift();
