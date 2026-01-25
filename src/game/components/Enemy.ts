@@ -274,6 +274,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.stateMachine.reset()
     this.#healthBar.enable();
     this.#absorptionTimer = 0;
+    this.#absorbingFirstTime = true
   }
 
   takeDamage(amount: number) {
