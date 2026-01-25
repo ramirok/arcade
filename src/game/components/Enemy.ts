@@ -5,6 +5,7 @@ import type { Player, PlayerData } from "./Player";
 import type { Bullet } from "./Bullet";
 import { HealthBar } from "./HealthBar";
 import { AbsorptionBar } from "./AbsorptionBar";
+import { FloatingText } from "./UIComponents";
 import { isWithinRange, type DataOverride } from "../utils";
 import { Physics, Math as PhaserMath, Utils } from "phaser";
 
@@ -210,6 +211,8 @@ export class Enemy extends Physics.Arcade.Sprite {
                   const randomAttribute = Utils.Array.GetRandom(attributesKeys)
                   const boostAmount = 1;
                   this.scene.player.data.inc(randomAttribute as keyof PlayerData, boostAmount);
+                  const attributeName = randomAttribute.replace('attribute', '').replace(/([A-Z])/g, ' $1').trim().toLowerCase();
+                  new FloatingText(this.scene, this.scene.player.x, this.scene.player.y, `+1 ${attributeName}`);
                   this.stateMachine.set('dead')
                 }
               } else {
