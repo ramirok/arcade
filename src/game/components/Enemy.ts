@@ -54,7 +54,6 @@ export class Enemy extends Physics.Arcade.Sprite {
   #corpseStartTime = 0
   #absorptionTimeInitial = 3000
   #absorptionTimer = 3000
-  #absorptionRange = 80
   #corpseLifetime = 120000
   #absorbingFirstTime = true
 
@@ -198,7 +197,7 @@ export class Enemy extends Physics.Arcade.Sprite {
               this.stateMachine.set('dead')
             } else {
               const distToPlayer = PhaserMath.Distance.Between(this.x, this.y, this.scene.player.x, this.scene.player.y)
-              if (distToPlayer < this.#absorptionRange) {
+              if (distToPlayer < this.scene.player.absorptionRange) {
                 if (this.#absorptionTimer > 0) {
                   this.#absorptionTimer -= dt
                   this.#absorptionBar.updateProgress(this.#absorptionTimer, this.#absorptionTimeInitial)

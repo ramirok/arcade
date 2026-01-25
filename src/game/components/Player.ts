@@ -51,6 +51,7 @@ export class Player extends Physics.Arcade.Sprite {
   #recalculateAttackMoveTimer = 0
   #lastHitTime = 0
   #regenDelay = 5000
+  absorptionRange = 80
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
