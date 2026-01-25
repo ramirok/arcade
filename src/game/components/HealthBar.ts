@@ -10,14 +10,15 @@ export class HealthBar extends GameObjects.Container {
   #offsetY;
   #enemy
   #pointerOver = false
+  #currentTween: Phaser.Tweens.Tween | null = null
 
-  constructor(enemy: Enemy, width = 50, height = 6, offsetY = -40) {
+  constructor(enemy: Enemy, width = 50, height = 6) {
     super(enemy.scene, enemy.x, enemy.y);
     this.#enemy = enemy
     this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000)
     this.#fill = new GameObjects.Rectangle(enemy.scene, 0, 0, width - 2, height - 2, 0x00ff00)
     this.#width = width;
-    this.#offsetY = offsetY;
+    this.#offsetY = -enemy.height / 2 - height;
 
     this.add([this.#background, this.#fill]);
     this.setVisible(this.scene.data.get('showBars'))
@@ -25,12 +26,17 @@ export class HealthBar extends GameObjects.Container {
 
 
     const setVisibility = () => {
-      if (this.#enemy.stateMachine.is('corpse')) {
-        this.setVisible(false)
-      } else if (this.#pointerOver || (this.scene.data.get('showBars') && this.active)) {
-        this.setVisible(true)
+      if (this.#enemy.stateMachine.is('corpse') || !this.active) {
+        if (this.visible) {
+          this.#cancelAnimation();
+        }
+        return
+      } else if (this.#pointerOver || this.scene.data.get('showBars')) {
+        if (!this.visible) {
+          this.#animateIn();
+        }
       } else {
-        this.setVisible(false)
+        this.#cancelAnimation();
       }
     }
     const handleShowHealthBars = () => {
@@ -45,7 +51,13 @@ export class HealthBar extends GameObjects.Container {
       setVisibility()
     }
     const handleHealthUpdate = () => {
-      this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'))
+      const currentHealth = this.#enemy.data.get('health')
+      this.updateHealth(currentHealth, this.#enemy.data.get('maxHealth'))
+      if (currentHealth < 1 && this.visible) {
+        this.scene.time.delayedCall(1000, () => {
+          setVisibility()
+        })
+      }
     }
 
     this.scene.data.events.on('changedata-showBars', handleShowHealthBars)
@@ -69,21 +81,50 @@ export class HealthBar extends GameObjects.Container {
     this.#fill.fillColor = percent > 0.5 ? 0x00ff00 : percent > 0.25 ? 0xffff00 : 0xff0000;
   }
 
+  #animateIn() {
+    this.#cancelAnimation();
+    this.setAlpha(0);
+    this.setVisible(true);
+    this.#currentTween = this.scene.tweens.add({
+      targets: this,
+      alpha: 1,
+      duration: 80,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.#currentTween = null;
+      }
+    });
+  }
+
+  #cancelAnimation() {
+    if (this.#currentTween) {
+      this.#currentTween.stop();
+      this.#currentTween = null;
+    }
+    this.setVisible(false);
+    this.setAlpha(1);
+  }
+
   preUpdate() {
     this.x = this.#enemy.x;
     this.y = this.#enemy.y + this.#offsetY;
   }
 
   disable() {
+    this.#cancelAnimation();
     this.setActive(false);
-    this.setVisible(false)
   }
 
   enable() {
     this.x = this.#enemy.x;
     this.y = this.#enemy.y + this.#offsetY;
     this.setActive(true);
-    this.setVisible(this.scene.data.get('showBars') || this.#pointerOver)
-    this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'))
+    this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'));
+    const shouldShow = this.scene.data.get('showBars') || this.#pointerOver;
+    if (shouldShow) {
+      this.#animateIn();
+    } else {
+      this.setVisible(false);
+    }
   }
 }

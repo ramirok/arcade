@@ -16,16 +16,16 @@ export class AbsorptionBar extends GameObjects.Container {
   #offsetY;
   #enemy;
   #pointerOver = false
-  #timer = 0;
   #duration
+  #currentTween: Phaser.Tweens.Tween | null = null
 
-  constructor(enemy: Enemy, absorptionDuration: number, width = 50, height = 6, offsetY = -30) {
+  constructor(enemy: Enemy, absorptionDuration: number, width = 50, height = 6) {
     super(enemy.scene, enemy.x, enemy.y);
     this.#enemy = enemy;
     this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000);
     this.#fill = new GameObjects.Rectangle(enemy.scene, -width / 2 + 1, 0, 0, height - 2, 0x9b59b6);
     this.#width = width;
-    this.#offsetY = offsetY;
+    this.#offsetY = -enemy.height / 2 - height;
     this.#duration = absorptionDuration
 
     this.setDataEnabled()
@@ -36,16 +36,18 @@ export class AbsorptionBar extends GameObjects.Container {
     this.scene.add.existing(this);
 
     const setVisibility = () => {
-      if (!this.#enemy.stateMachine.is('corpse')) {
-        this.setVisible(false)
+      if (!this.#enemy.stateMachine.is('corpse') || !this.active) {
+        return
       } else if (
         this.#pointerOver ||
-        (this.scene.data.get('showBars') && this.active) ||
+        this.scene.data.get('showBars') ||
         this.data.get('absorbing')
       ) {
-        this.setVisible(true)
+        if (!this.visible) {
+          this.#animateIn()
+        }
       } else {
-        this.setVisible(false)
+        this.#cancelAnimation();
       }
     }
     const handleShowHealthBars = () => {
@@ -75,21 +77,60 @@ export class AbsorptionBar extends GameObjects.Container {
   }
 
   updateProgress(timer: number, duration: number) {
-    this.#timer = timer;
     const percent = PhaserMath.Clamp((duration - timer) / duration, 0, 1);
     this.#fill.width = (this.#width - 2) * percent;
   }
 
+  #animateIn() {
+    this.#cancelAnimation();
+    this.setAlpha(0);
+    this.setVisible(true);
+    this.#currentTween = this.scene.tweens.add({
+      targets: this,
+      alpha: 1,
+      duration: 80,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        this.#currentTween = null;
+      }
+    });
+  }
+
+  #cancelAnimation() {
+    if (this.#currentTween) {
+      this.#currentTween.stop();
+      this.#currentTween = null;
+    }
+    this.setVisible(false);
+    this.setAlpha(1);
+  }
+
   disable() {
+    this.#cancelAnimation();
     this.setActive(false);
-    this.setVisible(false)
   }
 
   enable() {
     this.x = this.#enemy.x;
     this.y = this.#enemy.y + this.#offsetY;
+    console.log(this.y);
+
     this.setActive(true);
-    this.setVisible(this.scene.data.get('showBars'))
     this.updateProgress(this.#duration, this.#duration);
+    const shouldShow = this.scene.data.get('showBars') || this.#pointerOver;
+    if (shouldShow) {
+      this.y -= 8
+      console.log(this.y);
+
+      this.scene.tweens.add({
+        targets: this,
+        y: this.y + 8,
+        duration: 80,
+        delay: 1000
+      })
+      this.#animateIn();
+    } else {
+      this.setVisible(false);
+    }
   }
 }
