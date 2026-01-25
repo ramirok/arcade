@@ -12,7 +12,7 @@ export class HealthBar extends GameObjects.Container {
   #pointerOver = false
   #currentTween: Phaser.Tweens.Tween | null = null
 
-  constructor(enemy: Enemy, width = 50, height = 6) {
+  constructor(enemy: Enemy, width = 80, height = 10) {
     super(enemy.scene, enemy.x, enemy.y);
     this.#enemy = enemy
     this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000)
@@ -77,7 +77,7 @@ export class HealthBar extends GameObjects.Container {
 
   updateHealth(current: number, max: number) {
     const percent = PhaserMath.Clamp(current / max, 0, 1);
-    this.#fill.width = PhaserMath.Clamp((this.#width - 2) * percent, 1, this.#width - 2);
+    this.#fill.width = PhaserMath.Clamp((this.#width - 2) * percent, 2, this.#width - 2);
     this.#fill.fillColor = percent > 0.5 ? 0x00ff00 : percent > 0.25 ? 0xffff00 : 0xff0000;
   }
 

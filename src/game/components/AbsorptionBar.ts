@@ -19,7 +19,7 @@ export class AbsorptionBar extends GameObjects.Container {
   #duration
   #currentTween: Phaser.Tweens.Tween | null = null
 
-  constructor(enemy: Enemy, absorptionDuration: number, width = 50, height = 6) {
+  constructor(enemy: Enemy, absorptionDuration: number, width = 80, height = 10) {
     super(enemy.scene, enemy.x, enemy.y);
     this.#enemy = enemy;
     this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000);
@@ -78,7 +78,7 @@ export class AbsorptionBar extends GameObjects.Container {
 
   updateProgress(timer: number, duration: number) {
     const percent = PhaserMath.Clamp((duration - timer) / duration, 0, 1);
-    this.#fill.width = PhaserMath.Clamp((this.#width - 2) * percent, 1, this.#width - 2);
+    this.#fill.width = PhaserMath.Clamp((this.#width - 2) * percent, 2, this.#width - 2);
   }
 
   #animateIn() {
@@ -117,10 +117,11 @@ export class AbsorptionBar extends GameObjects.Container {
     this.updateProgress(this.#duration, this.#duration);
     const shouldShow = this.scene.data.get('showBars') || this.#pointerOver;
     if (shouldShow) {
-      this.y -= 8
+      const initalOffset = this.#background.height + 2
+      this.y -= initalOffset
       this.scene.tweens.add({
         targets: this,
-        y: this.y + 8,
+        y: this.y + initalOffset,
         duration: 80,
         delay: 1000
       })
