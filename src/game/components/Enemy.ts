@@ -46,8 +46,8 @@ export class Enemy extends Physics.Arcade.Sprite {
   #movementSpeed = 100
   #chaseRange = 400
   #xpValue = 1
-  #maxMana = 0
-  #mana = 0
+  // #maxMana = 0
+  // #mana = 0
   #healthBar
   #absorptionBar
   #corpseStartTime = 0
@@ -72,8 +72,8 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#attackBackswingTimeInitial = config.attackBackswingTime;
     this.#recalculateAttackMoveTimeInitial = config.recalculateAttackMoveTime;
     this.#xpValue = config.xpValue;
-    this.#maxMana = config.maxMana;
-    this.#mana = config.maxMana;
+    // this.#maxMana = config.maxMana;
+    // this.#mana = config.maxMana;
 
     this.#healthBar = new HealthBar(this);
     this.#absorptionBar = new AbsorptionBar(this, this.#absorptionTimeInitial)
@@ -270,7 +270,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.setAlpha(1)
     this.body.setEnable(true)
     this.data.set('health', this.data.get('maxHealth'))
-    this.#mana = this.#maxMana
+    // this.#mana = this.#maxMana
     this.stateMachine.reset()
     this.#healthBar.enable();
     this.#absorptionTimer = 0;
