@@ -55,6 +55,7 @@ export class Enemy extends Physics.Arcade.Sprite {
   #absorptionTimer = 3000
   #absorptionRange = 80
   #corpseLifetime = 120000
+  #absorbingFirstTime = true
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
@@ -212,7 +213,14 @@ export class Enemy extends Physics.Arcade.Sprite {
                   this.stateMachine.set('dead')
                 }
               } else {
-                this.#absorptionTimer = this.#absorptionTimeInitial
+                if (this.#absorbingFirstTime) {
+                  this.#absorptionTimer = this.#absorptionTimeInitial
+                  this.#absorbingFirstTime = false
+                }
+                if (this.#absorptionTimer <= this.#absorptionTimeInitial) {
+                  this.#absorptionTimer += dt
+                  this.#absorptionBar.updateProgress(this.#absorptionTimer, this.#absorptionTimeInitial)
+                }
                 if (this.#absorptionBar.data.get('absorbing')) {
                   this.#absorptionBar.data.set('absorbing', false)
                 }
