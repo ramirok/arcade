@@ -285,14 +285,15 @@ export class Enemy extends Physics.Arcade.Sprite {
     const damageAmount = isCritical ? amount * 2 : amount
     this.data.inc('health', -damageAmount)
     this.setTint(0xff0000);
+    const animation = this.scene.tweens.add({
+      targets: this,
+      duration: 150,
+      onComplete: () => this.clearTint()
+    });
     if (this.data.get('health') <= 0) {
       this.stateMachine.set('corpse');
+      animation.stop()
     } else if (this.#attackTarget === this.scene.castle) {
-      this.scene.tweens.add({
-        targets: this,
-        duration: 150,
-        onComplete: () => this.clearTint()
-      });
       this.stateMachine.set('attack-move', this.scene.player);
     }
   }
@@ -302,7 +303,7 @@ export class Enemy extends Physics.Arcade.Sprite {
 export class Slime extends Enemy {
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime', {
-      maxHealth: 1,
+      maxHealth: 10,
       damage: 3,
       attackRange: 200,
       chaseRange: 400,
