@@ -57,7 +57,7 @@ export type DataOverride<Entity, Data> = Omit<Phaser.Data.DataManager, 'set' | '
   }
   inc: <T extends keyof Data>(dataKey: T, amount: number) => Phaser.Data.DataManager
   toggle: <T extends keyof Data>(dataKey: T) => Phaser.Data.DataManager
-  events: Omit<Phaser.Events.EventEmitter, 'on'> & {
+  events: Omit<Phaser.Events.EventEmitter, 'on' | 'off'> & {
     on: {
       <T extends keyof Data>(event: `changedata-${keyof Data & string}`, cb: (entity: Entity, newData: Data[T], oldData: Data[T]) => void): Phaser.Events.EventEmitter;
       <T extends keyof Data>(event: 'changedata', cb: (entity: Entity, dataKey: T, newData: Data[T], oldData: Data[T]) => void): Phaser.Events.EventEmitter;
