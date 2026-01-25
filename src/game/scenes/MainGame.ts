@@ -14,7 +14,7 @@ export const GRID_WIDTH = WORLD_WIDTH / GRID_CELL_SIZE
 export const GRID_HEIGHT = WORLD_HEIGHT / GRID_CELL_SIZE
 
 type SceneData = {
-  showHealthBars: boolean
+  showBars: boolean
   charStatsOpen: boolean
 }
 
@@ -65,7 +65,7 @@ export class MainGame extends Scene {
   create() {
     console.log('MainGame create');
 
-    this.data.set('showHealthBars', false)
+    this.data.set('showBars', false)
     this.data.set('charStatsOpen', false)
 
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
@@ -106,19 +106,30 @@ export class MainGame extends Scene {
           const smoothPath = PF.Util.smoothenPath(grid, path);
           this.player.stateMachine.set('move', smoothPath)
         } else if (currentlyOver[0] instanceof Enemy) {
-          const isAttacking = this.player.stateMachine.getCurrent().startsWith('attack')
-          if (!(isAttacking && this.player.attackTarget === currentlyOver[0])) {
-            this.player.stateMachine.set('attack-move', currentlyOver[0])
+          if (currentlyOver[0].stateMachine.is('corpse')) {
+            const playerCell = getCellFromPixel(this.player.x, this.player.y)
+            const targetCell = getCellFromPixel(pointerEvent.worldX, pointerEvent.worldY)
+            const path = finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, grid.clone());
+            if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
+              path.shift();
+            }
+            const smoothPath = PF.Util.smoothenPath(grid, path);
+            this.player.stateMachine.set('move', smoothPath)
+          } else {
+            const isAttacking = this.player.stateMachine.getCurrent().startsWith('attack')
+            if (!(isAttacking && this.player.attackTarget === currentlyOver[0])) {
+              this.player.stateMachine.set('attack-move', currentlyOver[0])
+            }
           }
         }
       }
     });
 
     this.input.keyboard!.on('keydown-ALT', () => {
-      this.data.set('showHealthBars', true)
+      this.data.set('showBars', true)
     })
     this.input.keyboard!.on('keyup-ALT', () => {
-      this.data.set('showHealthBars', false)
+      this.data.set('showBars', false)
     })
     this.input.keyboard!.on('keydown-C', () => {
       this.data.toggle('charStatsOpen')
@@ -142,18 +153,22 @@ export class MainGame extends Scene {
     this.physics.add.overlap(this.enemies, this.enemies, (objA, objB) => {
       const enemyA = objA as Enemy
       const enemyB = objB as Enemy
-      this.#overlapRepel(enemyA, enemyB)
+      if (!enemyA.stateMachine.is('corpse') && !enemyB.stateMachine.is('corpse')) {
+        this.#overlapRepel(enemyA, enemyB)
+      }
     })
     this.physics.add.overlap(this.player, this.enemies, (objA, objB) => {
       const player = objA as Player
       const enemy = objB as Enemy
-      this.#overlapRepel(player, enemy)
+      if (!enemy.stateMachine.is('corpse')) {
+        this.#overlapRepel(player, enemy)
+      }
     })
 
     this.physics.add.overlap(this.bullets, this.enemies, (bulletObj, enemyObj) => {
       const bullet = bulletObj as Bullet;
       const enemy = enemyObj as Enemy;
-      if (bullet.active && enemy.active && bullet.ownerEntity instanceof Player) {
+      if (enemy.active && !enemy.stateMachine.is('corpse') && bullet.ownerEntity instanceof Player) {
         const damage = bullet.ownerEntity.data.get('attributeDamage');
         enemy.takeDamage(damage);
         bullet.disable();

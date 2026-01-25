@@ -34,6 +34,9 @@ export type PlayerData = {
   skillPoints: number
 }
 
+// const ABSORPTION_RANGE = 100
+// const ABSORPTION_DURATION = 3000
+
 export class Player extends Physics.Arcade.Sprite {
   declare scene: MainGame
   declare body: Physics.Arcade.Body;
@@ -51,6 +54,7 @@ export class Player extends Physics.Arcade.Sprite {
   #recalculateAttackMoveTimer = 0
   #lastHitTime = 0
   #REGEN_DELAY = 5000
+  // #absorptionTimer = 0
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
@@ -119,7 +123,7 @@ export class Player extends Physics.Arcade.Sprite {
             this.attackTarget = null
           },
           onUpdate: () => {
-            const enemies = this.scene.enemies.getMatching('active', true) as Enemy[];
+            const enemies = this.scene.enemies.getMatching('active', true).filter((enemy: Enemy) => !enemy.stateMachine.is('corpse'));
             if (enemies.length === 0) return;
             let closestEnemy: Enemy | null = null;
             let shortestDistance = Infinity;
@@ -165,18 +169,19 @@ export class Player extends Physics.Arcade.Sprite {
             this.attackTarget = target
           },
           onUpdate: (dt) => {
-            if (!this.attackTarget?.active) {
+            const canBeAttacked = this.attackTarget && this.attackTarget.active && !this.attackTarget.stateMachine.is('corpse')
+            if (!canBeAttacked) {
               return
             }
             if (this.#recalculateAttackMoveTimer > 0) {
               this.#recalculateAttackMoveTimer -= dt
             } else {
               this.#recalculateAttackMoveTimer = this.#recalculateAttackMoveTimeInitial
-              const withinRange = isWithinRange(this.x, this.y, this.attackTarget.x, this.attackTarget.y, this.#attackRange)
+              const withinRange = isWithinRange(this.x, this.y, this.attackTarget!.x, this.attackTarget!.y, this.#attackRange)
               if (withinRange) {
                 this.stateMachine.set('attack-prepare')
               } else {
-                this.scene.physics.moveToObject(this, this.attackTarget, this.#movementSpeed);
+                this.scene.physics.moveToObject(this, this.attackTarget!, this.#movementSpeed);
               }
             }
           },
@@ -192,11 +197,12 @@ export class Player extends Physics.Arcade.Sprite {
             if (this.#attackPrepareTimer > 0) {
               this.#attackPrepareTimer -= dt * (this.data.get('attributeAttackSpeed') + 1)
             } else {
-              if (this.attackTarget?.active) {
+              const canBeAttacked = this.attackTarget && this.attackTarget.active && !this.attackTarget.stateMachine.is('corpse')
+              if (canBeAttacked) {
                 const bullet = this.scene.bullets.get(this.x, this.y) as Bullet
                 bullet.ownerEntity = this
                 bullet.enable();
-                this.scene.physics.moveToObject(bullet, this.attackTarget, bullet.speed);
+                this.scene.physics.moveToObject(bullet, this.attackTarget!, bullet.speed);
                 this.stateMachine.set('attack-backswing')
               } else {
                 this.stateMachine.set('idle')
@@ -212,12 +218,13 @@ export class Player extends Physics.Arcade.Sprite {
             if (this.#attackBackswingTimer > 0) {
               this.#attackBackswingTimer -= dt * (this.data.get('attributeAttackSpeed') + 1)
             } else {
-              if (this.attackTarget?.active) {
-                const withinRange = isWithinRange(this.x, this.y, this.attackTarget.x, this.attackTarget.y, this.#attackRange)
+              const canBeAttacked = this.attackTarget && this.attackTarget.active && !this.attackTarget.stateMachine.is('corpse')
+              if (canBeAttacked) {
+                const withinRange = isWithinRange(this.x, this.y, this.attackTarget!.x, this.attackTarget!.y, this.#attackRange)
                 if (withinRange) {
                   this.stateMachine.set('attack-prepare')
                 } else {
-                  this.stateMachine.set('attack-move', this.attackTarget)
+                  this.stateMachine.set('attack-move', this.attackTarget!)
                 }
               } else {
                 this.stateMachine.set('idle')
@@ -247,6 +254,8 @@ export class Player extends Physics.Arcade.Sprite {
     this.stateMachine.update(dt)
 
     if (this.stateMachine.is('dead')) return
+
+    // this.#updateAbsorption(dt)
 
     if (this.scene.time.now - this.#lastHitTime < this.#REGEN_DELAY) return
 
@@ -303,5 +312,42 @@ export class Player extends Physics.Arcade.Sprite {
       this.data.inc('xpToNextLVL', Math.floor(this.data.get('xpToNextLVL') * 1.5))
     }
   }
+
+  // #updateAbsorption(dt: number) {
+  //   const enemies = this.scene.enemies.getMatching('active', true) as Enemy[];
+  //   const corpses = enemies.filter(e => e.stateMachine.is('corpse'));
+  //
+  //   let nearestCorpse: Enemy | null = null;
+  //   let shortestDistance = Infinity;
+  //
+  //   for (const corpse of corpses) {
+  //     const dist = PhaserMath.Distance.Between(this.x, this.y, corpse.x, corpse.y);
+  //     if (dist < shortestDistance) {
+  //       shortestDistance = dist;
+  //       nearestCorpse = corpse;
+  //     }
+  //   }
+  //
+  //   if (!nearestCorpse || shortestDistance > ABSORPTION_RANGE) {
+  //     this.#absorptionTimer = 0;
+  //     return;
+  //   }
+  //
+  //   this.#absorptionTimer += dt;
+  //   nearestCorpse.setAbsorptionTimer(this.#absorptionTimer);
+  //
+  //   if (this.#absorptionTimer >= ABSORPTION_DURATION) {
+  //     this.absorbCorpse(nearestCorpse);
+  //   }
+  // }
+
+  // absorbCorpse(enemy: Enemy) {
+  //   const attributes = enemy.getBoostableAttributes();
+  //   const randomAttribute = attributes[Math.floor(Math.random() * attributes.length)];
+  //   const boostAmount = 1;
+  //   this.data.inc(randomAttribute as any, boostAmount);
+  //   enemy.disable();
+  //   // this.#absorptionTimer = 0;
+  // }
 
 }

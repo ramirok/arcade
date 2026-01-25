@@ -1,33 +1,47 @@
 import { GameObjects, Math as PhaserMath } from "phaser";
 import type { Enemy } from "./Enemy";
 import { MainGame } from "../scenes/MainGame";
+import type { DataOverride } from "../utils";
 
-export class HealthBar extends GameObjects.Container {
+type AbsorptionBarData = {
+  absorbing: boolean
+}
+
+export class AbsorptionBar extends GameObjects.Container {
   declare scene: MainGame
+  declare data: DataOverride<AbsorptionBar, AbsorptionBarData>
   #background;
   #fill;
   #width;
   #offsetY;
-  #enemy
+  #enemy;
   #pointerOver = false
+  #timer = 0;
+  #duration = 3000;
 
-  constructor(enemy: Enemy, width = 50, height = 6, offsetY = -40) {
+  constructor(enemy: Enemy, width = 50, height = 6, offsetY = -30) {
     super(enemy.scene, enemy.x, enemy.y);
-    this.#enemy = enemy
-    this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000)
-    this.#fill = new GameObjects.Rectangle(enemy.scene, 0, 0, width - 2, height - 2, 0x00ff00)
+    this.#enemy = enemy;
+    this.#background = new GameObjects.Rectangle(enemy.scene, 0, 0, width, height, 0x000000);
+    this.#fill = new GameObjects.Rectangle(enemy.scene, 0, 0, width - 2, height - 2, 0x9b59b6);
     this.#width = width;
     this.#offsetY = offsetY;
 
+    this.setDataEnabled()
+    this.data.set('absorbing', false)
+
+
     this.add([this.#background, this.#fill]);
-    this.setVisible(this.scene.data.get('showBars'))
     this.scene.add.existing(this);
 
-
     const setVisibility = () => {
-      if (this.#enemy.stateMachine.is('corpse')) {
+      if (!this.#enemy.stateMachine.is('corpse')) {
         this.setVisible(false)
-      } else if (this.#pointerOver || (this.scene.data.get('showBars') && this.active)) {
+      } else if (
+        this.#pointerOver ||
+        (this.scene.data.get('showBars') && this.active) ||
+        this.data.get('absorbing')
+      ) {
         this.setVisible(true)
       } else {
         this.setVisible(false)
@@ -44,34 +58,26 @@ export class HealthBar extends GameObjects.Container {
       this.#pointerOver = false
       setVisibility()
     }
-    const handleHealthUpdate = () => {
-      this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'))
-    }
 
+    this.data.events.on('changedata-absorbing', setVisibility)
     this.scene.data.events.on('changedata-showBars', handleShowHealthBars)
-    enemy.data.events.on('changedata-health', handleHealthUpdate)
-    enemy.data.events.on('changedata-maxHealth', handleHealthUpdate)
     enemy.on('pointerout', handlePointerOut);
     enemy.on('pointerover', handlePointerOver);
 
     enemy.once('destroy', () => {
+      this.data.events.off('changedata-absorbing', setVisibility)
       this.scene.data.events.off('changedata-showBars', handleShowHealthBars)
-      enemy.data.events.off('changedata-health', handleHealthUpdate)
-      enemy.data.events.off('changedata-maxHealth', handleHealthUpdate)
       enemy.off('pointerout', handlePointerOut);
       enemy.off('pointerover', handlePointerOver);
     })
+    this.disable()
   }
 
-  updateHealth(current: number, max: number) {
-    const percent = PhaserMath.Clamp(current / max, 0, 1);
+  updateProgress(timer: number, duration: number) {
+    this.#timer = timer;
+    this.#duration = duration;
+    const percent = PhaserMath.Clamp(timer / duration, 0, 1);
     this.#fill.width = (this.#width - 2) * percent;
-    this.#fill.fillColor = percent > 0.5 ? 0x00ff00 : percent > 0.25 ? 0xffff00 : 0xff0000;
-  }
-
-  preUpdate() {
-    this.x = this.#enemy.x;
-    this.y = this.#enemy.y + this.#offsetY;
   }
 
   disable() {
@@ -83,7 +89,8 @@ export class HealthBar extends GameObjects.Container {
     this.x = this.#enemy.x;
     this.y = this.#enemy.y + this.#offsetY;
     this.setActive(true);
-    this.setVisible(this.scene.data.get('showBars') || this.#pointerOver)
-    this.updateHealth(this.#enemy.data.get('health'), this.#enemy.data.get('maxHealth'))
+    this.setVisible(this.scene.data.get('showBars'))
+    this.updateProgress(this.#timer, this.#duration);
   }
+
 }

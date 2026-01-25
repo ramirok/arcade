@@ -1,11 +1,12 @@
 import type { MainGame } from "../scenes/MainGame";
 import { StateMachine } from "../stateMachine";
 import type { Castle } from "./Castle";
-import type { Player } from "./Player";
+import type { Player, PlayerData } from "./Player";
 import type { Bullet } from "./Bullet";
 import { HealthBar } from "./HealthBar";
+import { AbsorptionBar } from "./AbsorptionBar";
 import { isWithinRange, type DataOverride } from "../utils";
-import { Physics, Math as PhaserMath } from "phaser";
+import { Physics, Math as PhaserMath, Utils } from "phaser";
 
 
 export interface EnemyConfig {
@@ -48,6 +49,12 @@ export class Enemy extends Physics.Arcade.Sprite {
   #maxMana = 0
   #mana = 0
   #healthBar
+  #absorptionBar
+  #corpseStartTime = 0
+  #absorptionTimeInitial = 3000
+  #absorptionTimer = 3000
+  #absorptionRange = 80
+  #corpseLifetime = 120000
 
   constructor(scene: MainGame, x: number, y: number, texture: string, config: EnemyConfig) {
     super(scene, x, y, texture);
@@ -68,6 +75,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#mana = config.maxMana;
 
     this.#healthBar = new HealthBar(this);
+    this.#absorptionBar = new AbsorptionBar(this)
     this.setInteractive()
     this.scene.physics.add.existing(this)
 
@@ -175,10 +183,50 @@ export class Enemy extends Physics.Arcade.Sprite {
         cast: {
           // TODO: to be implemented
         },
+        corpse: {
+          onEnter: () => {
+            this.scene.player.gainXP(this.#xpValue);
+            this.#corpseStartTime = this.scene.time.now;
+            this.setTint(0xCCCCCC)
+            this.#absorptionBar.enable();
+          },
+          onUpdate: (dt) => {
+            const timeSinceDeath = this.scene.time.now - this.#corpseStartTime;
+            if (timeSinceDeath > this.#corpseLifetime) {
+              this.stateMachine.set('dead')
+            } else {
+              const distToPlayer = PhaserMath.Distance.Between(this.x, this.y, this.scene.player.x, this.scene.player.y)
+              if (distToPlayer < this.#absorptionRange) {
+                if (this.#absorptionTimer > 0) {
+                  this.#absorptionTimer -= dt
+                  this.#absorptionBar.updateProgress(this.#absorptionTimer, this.#absorptionTimeInitial)
+                  if (!this.#absorptionBar.data.get('absorbing')) {
+                    this.#absorptionBar.data.set('absorbing', true)
+                  }
+                } else {
+                  const attributesObj = this.scene.player.data.query(/attribute/)
+                  const attributesKeys = Object.keys(attributesObj)
+                  const randomAttribute = Utils.Array.GetRandom(attributesKeys)
+                  const boostAmount = 1;
+                  this.scene.player.data.inc(randomAttribute as keyof PlayerData, boostAmount);
+                  this.stateMachine.set('dead')
+                }
+              } else {
+                this.#absorptionTimer = this.#absorptionTimeInitial
+                if (this.#absorptionBar.data.get('absorbing')) {
+                  this.#absorptionBar.data.set('absorbing', false)
+                }
+              }
+            }
+          },
+          onExit: () => {
+            this.clearTint();
+            this.#absorptionBar.disable();
+          }
+        },
         dead: {
           onEnter: () => {
             this.body.setEnable(false);
-            this.scene.player.gainXP(this.#xpValue);
             this.scene.tweens.add({
               targets: this,
               alpha: 0,
@@ -204,7 +252,8 @@ export class Enemy extends Physics.Arcade.Sprite {
   disable() {
     this.setActive(false);
     this.setVisible(false)
-    this.#healthBar.disable()
+    this.#healthBar.disable();
+    this.#absorptionBar.disable();
   }
 
   enable() {
@@ -215,7 +264,8 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.data.set('health', this.data.get('maxHealth'))
     this.#mana = this.#maxMana
     this.stateMachine.reset()
-    this.#healthBar.enable()
+    this.#healthBar.enable();
+    this.#absorptionTimer = 0;
   }
 
   get xpValue(): number {
@@ -236,14 +286,14 @@ export class Enemy extends Physics.Arcade.Sprite {
     const damageAmount = isCritical ? amount * 2 : amount
     this.data.inc('health', -damageAmount)
     this.setTint(0xff0000);
-    this.scene.tweens.add({
-      targets: this,
-      duration: 150,
-      onComplete: () => this.clearTint()
-    });
     if (this.data.get('health') <= 0) {
-      this.stateMachine.set('dead');
+      this.stateMachine.set('corpse');
     } else if (this.#attackTarget === this.scene.castle) {
+      this.scene.tweens.add({
+        targets: this,
+        duration: 150,
+        onComplete: () => this.clearTint()
+      });
       this.stateMachine.set('attack-move', this.scene.player);
     }
   }
@@ -253,7 +303,7 @@ export class Enemy extends Physics.Arcade.Sprite {
 export class Slime extends Enemy {
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime', {
-      maxHealth: 10,
+      maxHealth: 1,
       damage: 3,
       attackRange: 200,
       chaseRange: 400,
