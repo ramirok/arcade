@@ -2,7 +2,7 @@ import { DebugControlPanel, type PlayerDataKey } from "../components/DebugContro
 import type { MainGame } from "../game/scenes/MainGame";
 import { useGame } from "../Layout";
 
-export const Debug = () => {
+export const DebugPage = () => {
   const gameInstance = useGame();
   const mainGameScene = gameInstance().scene.getScene('main-game') as MainGame;
   const player = mainGameScene.player;
