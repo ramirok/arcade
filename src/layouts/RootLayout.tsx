@@ -1,7 +1,7 @@
 import { createSignal, onMount, Show, useContext, type Accessor, type ParentComponent } from 'solid-js'
 import { createContext } from "solid-js";
-import { StartGame } from './game/main';
 import type { Game } from 'phaser';
+import { StartGame } from '../game/main';
 
 
 const GameContext = createContext<Accessor<Game | null>>();
