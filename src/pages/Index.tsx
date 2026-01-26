@@ -4,7 +4,7 @@ import type { MainGame } from "../game/scenes/MainGame";
 import { CharStats } from "../components/CharStats";
 import { Show } from "solid-js";
 
-export function Index() {
+export const Index = () => {
 
   const gameInstance = useGame()
 
