@@ -1,33 +1,36 @@
-import { type Component } from 'solid-js';
+import { For, type Component } from 'solid-js';
 import { useGame } from '../layouts/RootLayout';
 import type { MainGame } from '../game/scenes/MainGame';
 import { createStore } from 'solid-js/store';
+import { debounce, type Scheduled } from '@solid-primitives/scheduled';
+import { PLAYER_DATA, type PlayerData, type Units } from '../game/components/Player';
 
 type EditableFieldProps = {
+  dataKey: keyof PlayerData
   label: string;
   value: number;
-  onChange: (value: number) => void;
-  isPercentage?: boolean;
+  onChange: Scheduled<[dataKey: keyof PlayerData, val: number]>;
+  unit: Units
 };
 
 const EditableField: Component<EditableFieldProps> = (props) => {
   const minVal = 0
   const maxVal = 999
   const formatValue = (val: number): string => {
-    return props.isPercentage ? `${(val * 100).toFixed(1)}` : val.toFixed(2);
+    return props.unit === 'percentage' ? `${(val * 100).toFixed(1)}` : val.toFixed(2);
   };
 
   const onInputChange = (e: InputEvent) => {
     const input = e.currentTarget as HTMLInputElement;
     let parsedVal = parseFloat(input.value);
 
-    if (props.isPercentage) {
+    if (props.unit === 'percentage') {
       parsedVal = parsedVal / 100;
     }
 
     parsedVal = Math.max(minVal, Math.min(maxVal, parsedVal));
 
-    props.onChange(parsedVal);
+    props.onChange(props.dataKey, parsedVal);
   };
 
   return (
@@ -39,12 +42,12 @@ const EditableField: Component<EditableFieldProps> = (props) => {
           type="number"
           min={minVal}
           max={maxVal}
-          step={props.isPercentage ? "0.1" : "1"}
+          step={props.unit === 'percentage' ? "0.1" : "1"}
           value={formatValue(props.value)}
           onInput={onInputChange}
           class="px-1 py-0.5 border border-gray-200 w-full"
         />
-        {props.isPercentage && '%'}
+        {props.unit === 'percentage' && '%'}
       </div>
     </div>
   );
@@ -74,17 +77,64 @@ export const DebugControlPanel: Component<{ closePanel: () => void }> = (props) 
   const mainGameScene = gameInstance().scene.getScene('main-game') as MainGame
   const player = mainGameScene.player
 
-
   const [playerData, setPlayerData] = createStore(player.data.getAll())
+
+  let panelRef: HTMLDivElement | undefined
+
+  let isDragging = false
+  let dragOffset = { x: 0, y: 0 }
+
+  const startDrag = (e: MouseEvent) => {
+    if (!panelRef) return
+    isDragging = true
+    dragOffset.x = e.clientX - panelRef.offsetLeft
+    dragOffset.y = e.clientY - panelRef.offsetTop
+  }
+
+  const onDrag = (e: MouseEvent) => {
+    if (isDragging && panelRef) {
+      const x = e.clientX - dragOffset.x
+      const y = e.clientY - dragOffset.y
+      const maxX = window.innerWidth - panelRef.offsetWidth
+      const maxY = window.innerHeight - panelRef.offsetHeight
+      panelRef.style.left = `${Math.min(Math.max(0, x), maxX)}px`
+      panelRef.style.top = `${Math.min(Math.max(0, y), maxY)}px`
+    }
+  }
+
+  const endDrag = () => {
+    isDragging = false
+    document.removeEventListener('mousemove', onDrag)
+    document.removeEventListener('mouseup', endDrag)
+  }
+
+  const onMouseDown = (e: MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.tagName === 'INPUT' || target.tagName === 'BUTTON') return
+    startDrag(e)
+    document.addEventListener('mousemove', onDrag)
+    document.addEventListener('mouseup', endDrag)
+  }
 
   player.data.events.on('changedata', (_, dataKey, data) => {
     setPlayerData(dataKey, data)
   })
 
+  const debouncedHandleChange = debounce((dataKey: keyof typeof playerData, val: number) => {
+    player.data.set(dataKey, val)
+  }, 300)
+
+  const statKeys = Object.keys(PLAYER_DATA.baseStats) as (keyof typeof PLAYER_DATA.baseStats)[]
+  const attributeKeys = Object.keys(PLAYER_DATA.attributes) as (keyof typeof PLAYER_DATA.attributes)[]
+  const currentStateKeys = Object.keys(PLAYER_DATA.currentState) as (keyof typeof PLAYER_DATA.currentState)[]
   return (
-    <div class="w-96 h-3/4 overflow-y-auto bg-neutral-100 border pointer-events-auto absolute">
-      <div class='sticky top-0 bg-neutral-100 p-4 flex items-center justify-between'>
-        <div>
+    <div
+      ref={panelRef}
+      onmousedown={onMouseDown}
+      class="w-96 h-3/4 overflow-y-auto bg-neutral-100 border pointer-events-auto absolute top-6 left-6"
+    >
+      <div class='sticky top-0 bg-neutral-100 p-4 flex items-center justify-between cursor-move'>
+        <div class='flex items-center'>
           DEBUG CONTROL PANEL
         </div>
         <button
@@ -95,120 +145,45 @@ export const DebugControlPanel: Component<{ closePanel: () => void }> = (props) 
       </div>
       <div class='space-y-4 p-4 pt-0'>
         <PropertyGroup title="Base Stats">
-          <EditableField
-            label="Strength"
-            value={playerData.statStrength}
-            onChange={(val) => player.data.set('statStrength', val)}
-          />
-          <EditableField
-            label="Agility"
-            value={playerData.statAgility}
-            onChange={(val) => player.data.set('statAgility', val)}
-          />
-          <EditableField
-            label="Vitality"
-            value={playerData.statVitality}
-            onChange={(val) => player.data.set('statVitality', val)}
-          />
-          <EditableField
-            label="Energy"
-            value={playerData.statEnergy}
-            onChange={(val) => player.data.set('statEnergy', val)}
-          />
+          <For each={statKeys}>
+            {(key) => {
+              return <EditableField
+                dataKey={key}
+                label={PLAYER_DATA.baseStats[key].label}
+                value={playerData[key]}
+                onChange={debouncedHandleChange}
+                unit={PLAYER_DATA.baseStats[key].unit}
+              />
+            }}
+          </For>
         </PropertyGroup>
 
-        <PropertyGroup title="Offensive Attributes">
-          <EditableField
-            label="Damage"
-            value={playerData.attributeDamage}
-            onChange={(val) => player.data.set('attributeDamage', val)}
-          />
-          <EditableField
-            label="Attack Speed"
-            value={playerData.attributeAttackSpeed}
-            onChange={(val) => player.data.set('attributeAttackSpeed', val)}
-          />
-          <EditableField
-            label="Crit Chance"
-            value={playerData.attributeCriticalChance}
-            onChange={(val) => player.data.set('attributeCriticalChance', val)}
-            isPercentage
-          />
-          <EditableField
-            label="Magic Damage"
-            value={playerData.attributeMagicDamage}
-            onChange={(val) => player.data.set('attributeMagicDamage', val)}
-          />
-        </PropertyGroup>
-
-        <PropertyGroup title="Defensive Attributes">
-          <EditableField
-            label="Evasion"
-            value={playerData.attributeEvasion}
-            onChange={(val) => player.data.set('attributeEvasion', val)}
-            isPercentage
-          />
-          <EditableField
-            label="Defense"
-            value={playerData.attributeDefense}
-            onChange={(val) => player.data.set('attributeDefense', val)}
-          />
-          <EditableField
-            label="Max Health"
-            value={playerData.attributeMaxHealth}
-            onChange={(val) => player.data.set('attributeMaxHealth', val)}
-          />
-          <EditableField
-            label="Max Mana"
-            value={playerData.attributeMaxMana}
-            onChange={(val) => player.data.set('attributeMaxMana', val)}
-          />
-        </PropertyGroup>
-
-        <PropertyGroup title="Regeneration">
-          <EditableField
-            label="Health Regen"
-            value={playerData.attributeHealthRegen}
-            onChange={(val) => player.data.set('attributeHealthRegen', val)}
-          />
-          <EditableField
-            label="Mana Regen"
-            value={playerData.attributeManaRegen}
-            onChange={(val) => player.data.set('attributeManaRegen', val)}
-          />
+        <PropertyGroup title="Attributes">
+          <For each={attributeKeys}>
+            {(key) => {
+              return <EditableField
+                dataKey={key}
+                label={PLAYER_DATA.attributes[key].label}
+                value={playerData[key]}
+                onChange={debouncedHandleChange}
+                unit={PLAYER_DATA.attributes[key].unit}
+              />
+            }}
+          </For>
         </PropertyGroup>
 
         <PropertyGroup title="Current State">
-          <EditableField
-            label="Health"
-            value={playerData.health}
-            onChange={(val) => player.data.set('health', val)}
-          />
-          <EditableField
-            label="Mana"
-            value={playerData.mana}
-            onChange={(val) => player.data.set('mana', val)}
-          />
-          <EditableField
-            label="Level"
-            value={playerData.lvl}
-            onChange={(val) => player.data.set('lvl', val)}
-          />
-          <EditableField
-            label="XP"
-            value={playerData.xp}
-            onChange={(val) => player.data.set('xp', val)}
-          />
-          <EditableField
-            label="XP to Next Level"
-            value={playerData.xpToNextLVL}
-            onChange={(val) => player.data.set('xpToNextLVL', val)}
-          />
-          <EditableField
-            label="Skill Points"
-            value={playerData.skillPoints}
-            onChange={(val) => player.data.set('skillPoints', val)}
-          />
+          <For each={currentStateKeys}>
+            {(key) => {
+              return <EditableField
+                dataKey={key}
+                label={PLAYER_DATA.currentState[key].label}
+                value={playerData[key]}
+                onChange={debouncedHandleChange}
+                unit={PLAYER_DATA.currentState[key].unit}
+              />
+            }}
+          </For>
         </PropertyGroup>
       </div>
     </div>
