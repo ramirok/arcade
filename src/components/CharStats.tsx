@@ -1,5 +1,5 @@
 import { createSignal, For, Show, type Component } from "solid-js";
-import { useGame } from "../RootLayout";
+import { useGame } from "../layouts/RootLayout";
 import type { MainGame } from "../game/scenes/MainGame";
 import { createStore } from "solid-js/store";
 import type { PlayerData } from "../game/components/Player";

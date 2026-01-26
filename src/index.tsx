@@ -5,7 +5,7 @@ import { Router, Route } from "@solidjs/router";
 import './index.css'
 import { IndexPage } from './pages/Index.tsx';
 import { DebugPage } from './pages/Debug.tsx';
-import { RootLayout } from './RootLayout.tsx';
+import { RootLayout } from './layouts/RootLayout.tsx';
 import { PlayPage } from './pages/Play.tsx';
 
 const root = document.getElementById('root')

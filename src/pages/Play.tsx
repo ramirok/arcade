@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { useGame } from "../RootLayout";
+import { useGame } from "../layouts/RootLayout";
 import type { MainGame } from "../game/scenes/MainGame";
 import { CharStats } from "../components/CharStats";
 import { Show } from "solid-js";
