@@ -46,7 +46,7 @@ export const isWithinRange = (x1: number, y1: number, x2: number, y2: number, ra
 //   return { data, events };
 // };
 
-export type DataOverride<Entity, Data> = Omit<Phaser.Data.DataManager, 'set' | 'get' | 'inc' | 'events' | 'toggle'> & {
+export type DataOverride<Entity, Data> = Omit<Phaser.Data.DataManager, 'set' | 'get' | 'inc' | 'events' | 'toggle' | 'getAll'> & {
   set: {
     (dataObject: Partial<Data>): Phaser.Data.DataManager
     <T extends keyof Data>(dataKey: T, data: Data[T]): Phaser.Data.DataManager
@@ -55,6 +55,7 @@ export type DataOverride<Entity, Data> = Omit<Phaser.Data.DataManager, 'set' | '
     <T extends keyof Data>(dataKeys: T[]): Data[T][]
     <T extends keyof Data>(dataKey: T): Data[T]
   }
+  getAll: () => Data
   inc: <T extends keyof Data>(dataKey: T, amount: number) => Phaser.Data.DataManager
   toggle: <T extends keyof Data>(dataKey: T) => Phaser.Data.DataManager
   events: Omit<Phaser.Events.EventEmitter, 'on' | 'off'> & {

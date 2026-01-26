@@ -1,9 +1,13 @@
-import type { ParentComponent } from "solid-js";
+import { Show, type ParentComponent } from "solid-js";
 import { useGame } from "./RootLayout";
 import type { MainGame } from "../game/scenes/MainGame";
 import { createStore } from "solid-js/store";
+import { useSearchParams } from "@solidjs/router";
+import { DebugControlPanel } from "../components/DebugControlPanel";
 
 export const BottomBarLayout: ParentComponent = (props) => {
+
+  const [searchParams, setSearchParams] = useSearchParams<{ debug: string }>();
 
   const gameInstance = useGame()
   const mainGameScene = gameInstance().scene.getScene('main-game') as MainGame
@@ -29,6 +33,9 @@ export const BottomBarLayout: ParentComponent = (props) => {
   })
 
   return <div>
+    <Show when={searchParams.debug === 'true'}>
+      <DebugControlPanel closePanel={() => setSearchParams({ debug: false })} />
+    </Show>
     {props.children}
     <div
       class="pointer-events-auto absolute bottom-0 w-4/6 h-40 flex items-center pb-4 gap-2 left-1/2 -translate-x-1/2"
