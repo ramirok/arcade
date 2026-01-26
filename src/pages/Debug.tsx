@@ -1,6 +1,6 @@
 import { DebugControlPanel, type PlayerDataKey } from "../components/DebugControlPanel";
 import type { MainGame } from "../game/scenes/MainGame";
-import { useGame } from "../Layout";
+import { useGame } from "../RootLayout";
 
 export const DebugPage = () => {
   const gameInstance = useGame();

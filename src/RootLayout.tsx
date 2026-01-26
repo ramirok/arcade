@@ -12,7 +12,7 @@ export function useGame() {
   }
   return context as Accessor<Game>;
 }
-export const Layout: ParentComponent = (props) => {
+export const RootLayout: ParentComponent = (props) => {
 
   const gameCointainerId = "game-container";
   const [gameRef, setGameRef] = createSignal<Game | null>(null);

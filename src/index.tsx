@@ -5,13 +5,13 @@ import { Router, Route } from "@solidjs/router";
 import './index.css'
 import { IndexPage } from './pages/Index.tsx';
 import { DebugPage } from './pages/Debug.tsx';
-import { Layout } from './Layout.tsx';
+import { RootLayout } from './RootLayout.tsx';
 import { PlayPage } from './pages/Play.tsx';
 
 const root = document.getElementById('root')
 
 render(() =>
-  <Router root={Layout}>
+  <Router root={RootLayout}>
     <Route path="/" component={IndexPage} />
     <Route path="/play" component={PlayPage} />
     <Route path="/debug" component={DebugPage} />
