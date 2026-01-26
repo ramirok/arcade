@@ -12,7 +12,7 @@ export function useGame() {
   }
   return context as Accessor<Game>;
 }
-const Layout: ParentComponent = (props) => {
+export const Layout: ParentComponent = (props) => {
 
   const gameCointainerId = "game-container";
   const [gameRef, setGameRef] = createSignal<Game | null>(null);
@@ -41,4 +41,3 @@ const Layout: ParentComponent = (props) => {
   )
 }
 
-export default Layout
