@@ -3,7 +3,7 @@ import { render } from 'solid-js/web'
 import { Router, Route } from "@solidjs/router";
 
 import './index.css'
-import Debug from './debug.tsx';
+import Debug from './pages/Debug.tsx';
 import Layout from './Layout.tsx';
 import { Index } from './pages/Index.tsx';
 
