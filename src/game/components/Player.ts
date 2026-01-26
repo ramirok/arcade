@@ -282,7 +282,7 @@ export class Player extends Physics.Arcade.Sprite {
     }
 
     const defense = this.data.get('attributeDefense');
-    const finalDamage = Math.max(1, amount - defense);
+    const finalDamage = Math.min(1, Math.abs(amount - defense));
 
     this.#lastHitTime = this.scene.time.now;
 
