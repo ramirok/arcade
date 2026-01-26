@@ -211,7 +211,7 @@ export class Enemy extends Physics.Arcade.Sprite {
                   const boostAmount = 1;
                   this.scene.player.data.inc(randomAttribute as keyof PlayerData, boostAmount);
                   const attributeName = randomAttribute.replace('attribute', '').replace(/([A-Z])/g, ' $1').trim().toLowerCase();
-                  new FloatingText(this.scene, this.scene.player.x, this.scene.player.y, `+1 ${attributeName}`);
+                  new FloatingText(this, this.scene.player.x, this.scene.player.y, `+1 ${attributeName}`);
                   this.stateMachine.set('dead')
                 }
               } else {
@@ -289,6 +289,10 @@ export class Enemy extends Physics.Arcade.Sprite {
       targets: this,
       duration: 150,
       onComplete: () => this.clearTint()
+    });
+    new FloatingText(this, this.x, this.y, damageAmount.toString(), {
+      color: isCritical ? '#FFD700' : '#FFFFFF',
+      fontSize: isCritical ? '24px' : '20px'
     });
     if (this.data.get('health') <= 0) {
       this.stateMachine.set('corpse');

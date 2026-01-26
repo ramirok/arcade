@@ -3,17 +3,18 @@ import type { MainGame } from "../scenes/MainGame";
 
 export class FloatingText extends GameObjects.Text {
   declare scene: MainGame
-  constructor(scene: Scene, x: number, y: number, text: string) {
-    super(scene, x, y, text, {
-      color: '#00ff00',
-      fontSize: '20px',
-      fontStyle: 'bold'
+  constructor(entity: GameObjects.Sprite, x: number, y: number, text: string, options?: { color?: string, fontSize?: string }) {
+    super(entity.scene, x, y, text, {
+      color: options?.color || '#00ff00',
+      fontSize: options?.fontSize || '20px',
+      fontStyle: 'bold',
+      stroke: '#000000',
+      strokeThickness: 1
     });
-    this.x += -this.width / 2
-    this.y -= (this.scene.player.height + 40) / 2
-
-    scene.add.existing(this);
-    scene.tweens.add({
+    this.x += -this.width / 2;
+    this.y -= (entity.height + 40) / 2;
+    this.scene.add.existing(this);
+    this.scene.tweens.add({
       targets: this,
       y: this.y - 40,
       alpha: 0,
