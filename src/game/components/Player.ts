@@ -6,33 +6,148 @@ import { getPixelPosition, isWithinRange, type DataOverride } from "../utils";
 import { Math as PhaserMath, Physics } from "phaser";
 
 
-export type PlayerData = {
-  statStrength: number
-  statAgility: number
-  statVitality: number
-  statEnergy: number
+export type Units = 'int' | 'percentage' | 'bool'
+export const PLAYER_DATA = {
+  baseStats: {
+    statStrength: {
+      unit: 'int',
+      label: 'Strength',
+      exampleVal: 0
+    },
+    statAgility: {
+      unit: 'int',
+      label: 'Agility',
+      exampleVal: 0
+    },
+    statVitality: {
+      unit: 'int',
+      label: 'Vitality',
+      exampleVal: 0
+    },
+    statEnergy: {
+      unit: 'int',
+      label: 'Energy',
+      exampleVal: 0
+    }
+  },
+  attributes: {
+    attributeDamage: {
+      unit: 'int',
+      label: 'Damage',
+      exampleVal: 0
+    },
+    attributeCriticalChance: {
+      unit: 'percentage',
+      label: 'Critical Chance',
+      exampleVal: 0
+    },
+    attributeAttackSpeed: {
+      unit: 'percentage',
+      label: 'Attack Speed',
+      exampleVal: 0
+    },
+    attributeEvasion: {
+      unit: 'percentage',
+      label: 'Evasion',
+      exampleVal: 0
+    },
+    attributeMaxMana: {
+      unit: 'int',
+      label: 'Max Mana',
+      exampleVal: 0
+    },
+    attributeManaRegen: {
+      unit: 'int',
+      label: 'Mana Regen',
+      exampleVal: 0
+    },
+    attributeMagicDamage: {
+      unit: 'int',
+      label: 'Magic Damage',
+      exampleVal: 0
+    },
+    attributeMaxHealth: {
+      unit: 'int',
+      label: 'Max Health',
+      exampleVal: 0
+    },
+    attributeHealthRegen: {
+      unit: 'int',
+      label: 'Health Regen',
+      exampleVal: 0
+    },
+    attributeDefense: {
+      unit: 'int',
+      label: 'Defense',
+      exampleVal: 0
+    }
+  },
+  currentState: {
+    health: {
+      unit: 'int',
+      label: 'Health',
+      exampleVal: 0
+    },
+    mana: {
+      unit: 'int',
+      label: 'Mana',
+      exampleVal: 0
+    },
+    level: {
+      unit: 'int',
+      label: 'Level',
+      exampleVal: 0
+    },
+    exp: {
+      unit: 'int',
+      label: 'Exp',
+      exampleVal: 0
+    },
+    expToNextLevel: {
+      unit: 'int',
+      label: 'Exp To Next Level',
+      exampleVal: 0
+    },
+    skillPoints: {
+      unit: 'int',
+      label: 'Skill Points',
+      exampleVal: 0
+    }
+  }
+} satisfies Record<string, Record<string, { unit: Units, label: string, exampleVal: number | string | boolean }>>
+PLAYER_DATA.baseStats.statStrength.unit === 'int'
 
-  attributeDamage: number
-  attributeCriticalChance: number
+export type PlayerData = { [Key in keyof typeof PLAYER_DATA['baseStats']]: typeof PLAYER_DATA['baseStats'][Key]['exampleVal'] } &
+{ [Key in keyof typeof PLAYER_DATA['attributes']]: typeof PLAYER_DATA['attributes'][Key]['exampleVal'] } &
+{ [Key in keyof typeof PLAYER_DATA['currentState']]: typeof PLAYER_DATA['currentState'][Key]['exampleVal'] }
 
-  attributeAttackSpeed: number
-  attributeEvasion: number
-
-  attributeMaxMana: number
-  attributeManaRegen: number
-  attributeMagicDamage: number
-
-  attributeMaxHealth: number
-  attributeHealthRegen: number
-  attributeDefense: number
-
-  health: number;
-  mana: number
-  level: number
-  exp: number
-  expToNextLevel: number
-  skillPoints: number
-}
+// export type PlayerData = {
+//   statStrength: number
+//   statAgility: number
+//   statVitality: number
+//   statEnergy: number
+//
+//   attributeDamage: number
+//   attributeCriticalChance: number
+//
+//   attributeAttackSpeed: number
+//   attributeEvasion: number
+//
+//   attributeMaxMana: number
+//   attributeManaRegen: number
+//   attributeMagicDamage: number
+//
+//   attributeMaxHealth: number
+//   attributeHealthRegen: number
+//   attributeDefense: number
+//
+//   health: number;
+//   mana: number
+//   level: number
+//   exp: number
+//   expToNextLevel: number
+//   skillPoints: number
+// }
 
 export class Player extends Physics.Arcade.Sprite {
   declare scene: MainGame
