@@ -19,8 +19,6 @@ export const BottomBarLayout: ParentComponent = (props) => {
     chartStatsOpen: false
   })
 
-
-
   player.data.events.on('changedata', (_, dataKey, data) => {
     if (dataKey in store) {
       setStore(dataKey as keyof typeof store, data)
@@ -29,6 +27,7 @@ export const BottomBarLayout: ParentComponent = (props) => {
   mainGameScene.data.events.on('changedata-charStatsOpen', (_, data) => {
     setStore('chartStatsOpen', data)
   })
+
   return <div>
     {props.children}
     <div
