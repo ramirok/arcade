@@ -290,7 +290,7 @@ export class Enemy extends Physics.Arcade.Sprite {
       duration: 150,
       onComplete: () => this.clearTint()
     });
-    new FloatingText(this, this.x, this.y, damageAmount.toString(), {
+    new FloatingText(this, this.x, this.y - 20, damageAmount.toString(), {
       color: isCritical ? '#FFD700' : '#FFFFFF',
       fontSize: isCritical ? '24px' : '20px'
     });
