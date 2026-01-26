@@ -28,9 +28,9 @@ export type PlayerData = {
 
   health: number;
   mana: number
-  lvl: number
-  xp: number
-  xpToNextLVL: number
+  level: number
+  exp: number
+  expToNextLevel: number
   skillPoints: number
 }
 
@@ -62,9 +62,9 @@ export class Player extends Physics.Arcade.Sprite {
     this.data.set({
       health: maxHealth,
       mana: maxMana,
-      lvl: 1,
-      xp: 0,
-      xpToNextLVL: 10,
+      level: 1,
+      exp: 0,
+      expToNextLevel: 10,
       skillPoints: 10,
 
       statEnergy: 1,
@@ -301,12 +301,12 @@ export class Player extends Physics.Arcade.Sprite {
   }
 
   gainXP(amount: number) {
-    this.data.inc('xp', amount)
-    while (this.data.get('xp') >= this.data.get('xpToNextLVL')) {
-      this.data.inc('lvl', 1)
+    this.data.inc('exp', amount)
+    while (this.data.get('exp') >= this.data.get('expToNextLevel')) {
+      this.data.inc('level', 1)
       this.data.inc('skillPoints', 5)
-      this.data.inc('xp', -this.data.get('xpToNextLVL'))
-      this.data.inc('xpToNextLVL', Math.floor(this.data.get('xpToNextLVL') * 1.5))
+      this.data.inc('exp', -this.data.get('expToNextLevel'))
+      this.data.inc('expToNextLevel', Math.floor(this.data.get('expToNextLevel') * 1.5))
     }
   }
 }

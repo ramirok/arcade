@@ -16,8 +16,8 @@ export const BottomBarLayout: ParentComponent = (props) => {
   const [store, setStore] = createStore({
     health: player.data.get('health'),
     attributeMaxHealth: player.data.get('attributeMaxHealth'),
-    xp: player.data.get('xp'),
-    xpToNextLVL: player.data.get('xpToNextLVL'),
+    xp: player.data.get('exp'),
+    expToNextLevel: player.data.get('expToNextLevel'),
     mana: player.data.get('mana'),
     attributeMaxMana: player.data.get('attributeMaxMana'),
     chartStatsOpen: false
@@ -56,7 +56,7 @@ export const BottomBarLayout: ParentComponent = (props) => {
         <div
           class="h-full bg-indigo-500 rounded transition-all"
           style={{
-            width: `${(store.xp * 100) / store.xpToNextLVL}%`
+            width: `${(store.xp * 100) / store.expToNextLevel}%`
           }}
         >
         </div>
