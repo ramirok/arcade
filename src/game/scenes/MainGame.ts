@@ -134,7 +134,6 @@ export class MainGame extends Scene {
     });
 
     this.enemies = this.physics.add.group({
-      classType: Slime,
       maxSize: 10,
       collideWorldBounds: true,
     })
@@ -253,7 +252,8 @@ export class MainGame extends Scene {
 
     Geom.Rectangle.Inflate(safeZone, safePadding, safePadding);
 
-    let x, y;
+    let x = 0
+    let y = 0
     let isInsideSafeZone = true;
 
     while (isInsideSafeZone) {
@@ -261,10 +261,13 @@ export class MainGame extends Scene {
       y = PhaserMath.Between(0, this.gameMap.worldHeight);
       isInsideSafeZone = safeZone.contains(x, y);
     }
-    const enemy = this.enemies.get(x, y) as Enemy | null
+    const enemy = this.enemies.getFirstDead(false, x, y, undefined, undefined, true);
 
     if (enemy) {
       enemy.enable()
+    } else {
+      const newEnemy = new Slime(this, x, y)
+      this.enemies.add(newEnemy)
     }
     this.time.delayedCall(PhaserMath.Between(2000, 4000), this.#spawnEnemy, undefined, this)
   }

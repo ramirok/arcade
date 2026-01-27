@@ -327,3 +327,33 @@ export class Slime extends Enemy {
     this.play('idle');
   }
 }
+
+export class SlimeBigger extends Enemy {
+  constructor(scene: MainGame, x: number, y: number) {
+    super(scene, x, y, 'slime', {
+      maxHealth: 20,
+      damage: 5,
+      attackRange: 220,
+      chaseRange: 430,
+      movementSpeed: 80,
+      attackPrepareTime: 450,
+      attackBackswingTime: 450,
+      recalculateAttackMoveTime: 200,
+      xpValue: 3,
+      maxMana: 7
+    })
+
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+    this.setScale(2)
+
+    this.anims.create({
+      key: 'idle',
+      frames: this.anims.generateFrameNumbers('slime'),
+      frameRate: 8,
+      repeat: -1,
+      randomFrame: true,
+    });
+    this.play('idle');
+  }
+}
