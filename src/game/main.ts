@@ -7,7 +7,7 @@ import { AUTO, Game, Scale } from "phaser";
 const config: Phaser.Types.Core.GameConfig = {
   type: AUTO,
   scale: {
-    mode: Scale.EXPAND,
+    mode: Scale.RESIZE,
     autoCenter: Scale.CENTER_BOTH,
     width: 1920,
     height: 1080,
