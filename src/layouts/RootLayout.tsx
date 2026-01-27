@@ -2,6 +2,7 @@ import { createSignal, onMount, Show, useContext, type Accessor, type ParentComp
 import { createContext } from "solid-js";
 import type { Game } from 'phaser';
 import { StartGame } from '../game/main';
+import { NavBar } from '../components/NavBar';
 
 
 const GameContext = createContext<Accessor<Game | null>>();
@@ -31,6 +32,7 @@ export const RootLayout: ParentComponent = (props) => {
         class="relative w-screen h-screen flex items-center justify-center"
       >
         <div id={gameCointainerId}></div>
+        <NavBar />
         <Show when={gameRef()} keyed>
           <div class="absolute inset-0 pointer-events-none">
             {props.children}

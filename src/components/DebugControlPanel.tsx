@@ -131,7 +131,7 @@ export const DebugControlPanel: Component<{ closePanel: () => void }> = (props) 
     <div
       ref={panelRef}
       onmousedown={onMouseDown}
-      class="w-96 h-3/4 overflow-y-auto bg-neutral-100 border pointer-events-auto absolute top-6 left-6"
+      class="w-96 h-3/4 overflow-y-auto bg-neutral-100 border pointer-events-auto absolute top-28 left-4"
     >
       <div class='sticky top-0 bg-neutral-100 p-4 flex items-center justify-between cursor-move'>
         <div class='flex items-center'>
