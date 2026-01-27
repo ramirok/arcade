@@ -1,16 +1,15 @@
 import { Math as PhaserMath } from "phaser";
-import { GRID_CELL_SIZE } from "./scenes/MainGame";
 
-export const getPixelPosition = (cellX: number, cellY: number) => {
+export const getPixelPosition = (cellX: number, cellY: number, cellSize: number) => {
   return {
-    x: (cellX * GRID_CELL_SIZE) + (GRID_CELL_SIZE / 2),
-    y: (cellY * GRID_CELL_SIZE) + (GRID_CELL_SIZE / 2)
+    x: (cellX * cellSize) + (cellSize / 2),
+    y: (cellY * cellSize) + (cellSize / 2)
   };
 }
-export const getCellFromPixel = (pixelX: number, pixelY: number) => {
+export const getCellFromPixel = (pixelX: number, pixelY: number, cellSize: number) => {
   return {
-    cellX: Math.floor(pixelX / GRID_CELL_SIZE),
-    cellY: Math.floor(pixelY / GRID_CELL_SIZE)
+    cellX: Math.floor(pixelX / cellSize),
+    cellY: Math.floor(pixelY / cellSize)
   };
 }
 

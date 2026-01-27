@@ -1,15 +1,9 @@
 import { GameObjects, Math as PhaserMath } from "phaser";
 import type { Enemy } from "./Enemy";
 import { MainGame } from "../scenes/MainGame";
-import type { DataOverride } from "../utils";
-
-type AbsorptionBarData = {
-  absorbing: boolean
-}
 
 export class AbsorptionBar extends GameObjects.Container {
   declare scene: MainGame
-  declare data: DataOverride<AbsorptionBar, AbsorptionBarData>
   #background;
   #fill;
   #width;
@@ -29,51 +23,35 @@ export class AbsorptionBar extends GameObjects.Container {
     this.#duration = absorptionDuration
 
     this.setDataEnabled()
-    this.data.set('absorbing', false)
-
 
     this.add([this.#background, this.#fill]);
     this.scene.add.existing(this);
 
-    const setVisibility = () => {
-      if (!this.#enemy.stateMachine.is('corpse') || !this.active) {
-        return
-      } else if (
-        this.#pointerOver ||
-        this.scene.data.get('showBars') ||
-        this.data.get('absorbing')
-      ) {
-        if (!this.visible) {
-          this.#animateIn()
-        }
-      } else {
-        this.#cancelAnimation();
-      }
-    }
-    const handleShowHealthBars = () => {
-      setVisibility()
-    }
     const handlePointerOver = () => {
       this.#pointerOver = true
-      setVisibility()
     }
     const handlePointerOut = () => {
       this.#pointerOver = false
-      setVisibility()
     }
 
-    this.data.events.on('changedata-absorbing', setVisibility)
-    this.scene.data.events.on('changedata-showBars', handleShowHealthBars)
     enemy.on('pointerout', handlePointerOut);
     enemy.on('pointerover', handlePointerOver);
 
     enemy.once('destroy', () => {
-      this.data.events.off('changedata-absorbing', setVisibility)
-      this.scene.data.events.off('changedata-showBars', handleShowHealthBars)
       enemy.off('pointerout', handlePointerOut);
       enemy.off('pointerover', handlePointerOver);
     })
     this.disable()
+  }
+
+  preUpdate() {
+    if (this.scene.data.values.showBars || this.#pointerOver || this.#fill.width > 2) {
+      if (!this.visible) {
+        this.#animateIn()
+      }
+    } else if (this.visible) {
+      this.#cancelAnimation()
+    }
   }
 
   updateProgress(timer: number, duration: number) {

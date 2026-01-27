@@ -196,14 +196,12 @@ export class Enemy extends Physics.Arcade.Sprite {
             if (timeSinceDeath > this.#corpseLifetime) {
               this.stateMachine.set('dead')
             } else {
+
               const distToPlayer = PhaserMath.Distance.Between(this.x, this.y, this.scene.player.x, this.scene.player.y)
-              if (distToPlayer < this.scene.player.absorptionRange) {
+              if (distToPlayer < this.scene.player.absorptionRange && this.scene.player.stateMachine.is('absorbe')) {
                 if (this.#absorptionTimer > 0) {
                   this.#absorptionTimer -= dt
                   this.#absorptionBar.updateProgress(this.#absorptionTimer, this.#absorptionTimeInitial)
-                  if (!this.#absorptionBar.data.get('absorbing')) {
-                    this.#absorptionBar.data.set('absorbing', true)
-                  }
                 } else {
                   const attributesObj = this.scene.player.data.query(/attribute/)
                   const attributesKeys = Object.keys(attributesObj)
@@ -222,9 +220,6 @@ export class Enemy extends Physics.Arcade.Sprite {
                 if (this.#absorptionTimer <= this.#absorptionTimeInitial) {
                   this.#absorptionTimer += dt
                   this.#absorptionBar.updateProgress(this.#absorptionTimer, this.#absorptionTimeInitial)
-                }
-                if (this.#absorptionBar.data.get('absorbing')) {
-                  this.#absorptionBar.data.set('absorbing', false)
                 }
               }
             }

@@ -3,15 +3,8 @@ import { Castle } from "../components/Castle";
 import { Enemy, Slime } from "../components/Enemy";
 import { Player } from "../components/Player";
 import { Bullet } from "../components/Bullet";
-import { getCellFromPixel, type DataOverride } from "../utils";
-import PF from 'pathfinding'
+import { type DataOverride } from "../utils";
 import { GameObjects, Geom, Input, Math as PhaserMath, Physics, Scene } from "phaser";
-
-export const WORLD_WIDTH = 3000
-export const WORLD_HEIGHT = 3000
-export const GRID_CELL_SIZE = 30
-export const GRID_WIDTH = WORLD_WIDTH / GRID_CELL_SIZE
-export const GRID_HEIGHT = WORLD_HEIGHT / GRID_CELL_SIZE
 
 type SceneData = {
   showBars: boolean
@@ -28,6 +21,13 @@ export class MainGame extends Scene {
   enemies!: Physics.Arcade.Group;
   #camLastX!: number
   #camLastY!: number
+  gameMap = {} as {
+    worldWidth: number,
+    worldHeight: number,
+    gridCellSize: number,
+    gridWidth: number,
+    gridHeight: number
+  }
 
   // initialized now
   #visibleChunks: Record<string, GameObjects.Image> = {}
@@ -68,11 +68,15 @@ export class MainGame extends Scene {
     this.data.set('showBars', false)
     this.data.set('charStatsOpen', false)
 
-    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    this.gameMap.worldHeight = 3000
+    this.gameMap.worldWidth = 3000
+    this.gameMap.gridCellSize = 30
+    this.gameMap.gridHeight = this.gameMap.worldHeight / this.gameMap.gridCellSize
+    this.gameMap.gridWidth = this.gameMap.worldWidth / this.gameMap.gridCellSize
 
-    const grid = new PF.Grid(GRID_WIDTH, GRID_HEIGHT);
-    const finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: true });
+    this.cameras.main.setBounds(0, 0, this.gameMap.worldWidth, this.gameMap.worldHeight);
+    this.physics.world.setBounds(0, 0, this.gameMap.worldWidth, this.gameMap.worldHeight);
+
 
     this.input.keyboard!.on('keydown-ESC', () => {
       this.scene.pause()
@@ -81,10 +85,10 @@ export class MainGame extends Scene {
 
     this.player = new Player(
       this,
-      WORLD_WIDTH / 2,
-      WORLD_HEIGHT / 2 + 250,
+      this.gameMap.worldWidth / 2,
+      this.gameMap.worldHeight / 2 + 250,
     )
-    this.castle = new Castle(this, WORLD_WIDTH / 2, WORLD_HEIGHT / 2)
+    this.castle = new Castle(this, this.gameMap.worldWidth / 2, this.gameMap.worldHeight / 2)
     new Cursor(this, 0, 0);
 
     this.#camLastX = this.cameras.main.scrollX
@@ -94,30 +98,16 @@ export class MainGame extends Scene {
     this.input.on('pointerdown', (pointerEvent: Input.Pointer, currentlyOver: GameObjects.GameObject[]) => {
       if (pointerEvent.button === 2) {
         if (currentlyOver.length === 0) {
-          const playerCell = getCellFromPixel(this.player.x, this.player.y)
-          const targetCell = getCellFromPixel(pointerEvent.worldX, pointerEvent.worldY)
-          if (playerCell.cellX === targetCell.cellX && playerCell.cellY === targetCell.cellY) {
-            return
-          }
-          const path = finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, grid.clone());
-          if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
-            path.shift();
-          }
-          const smoothPath = PF.Util.smoothenPath(grid, path);
-          this.player.stateMachine.set('move', smoothPath)
+          this.player.stateMachine.set('move', pointerEvent)
         } else if (currentlyOver[0] instanceof Enemy) {
           if (currentlyOver[0].stateMachine.is('corpse')) {
-            const playerCell = getCellFromPixel(this.player.x, this.player.y)
-            const targetCell = getCellFromPixel(pointerEvent.worldX, pointerEvent.worldY)
-            if (playerCell.cellX === targetCell.cellX && playerCell.cellY === targetCell.cellY) {
-              return
-            }
-            const path = finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, grid.clone());
-            if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
-              path.shift();
-            }
-            const smoothPath = PF.Util.smoothenPath(grid, path);
-            this.player.stateMachine.set('move', smoothPath)
+            this.player.stateMachine.set('absorbe-move', currentlyOver[0])
+            // if (this.player.stateMachine.is('absorbing') &&
+            //   this.player.currentAbsorbingCorpse === currentlyOver[0]) {
+            //   this.player.stateMachine.set('idle')
+            // } else {
+            //   this.player.stateMachine.set('absorbing', currentlyOver[0])
+            // }
           } else {
             const isAttacking = this.player.stateMachine.getCurrent().startsWith('attack')
             if (!(isAttacking && this.player.attackTarget === currentlyOver[0])) {
@@ -145,7 +135,7 @@ export class MainGame extends Scene {
 
     this.enemies = this.physics.add.group({
       classType: Slime,
-      // maxSize: 10,
+      maxSize: 10,
       collideWorldBounds: true,
     })
     this.#spawnEnemy()
@@ -267,8 +257,8 @@ export class MainGame extends Scene {
     let isInsideSafeZone = true;
 
     while (isInsideSafeZone) {
-      x = PhaserMath.Between(0, WORLD_WIDTH);
-      y = PhaserMath.Between(0, WORLD_HEIGHT);
+      x = PhaserMath.Between(0, this.gameMap.worldWidth);
+      y = PhaserMath.Between(0, this.gameMap.worldHeight);
       isInsideSafeZone = safeZone.contains(x, y);
     }
     const enemy = this.enemies.get(x, y) as Enemy | null

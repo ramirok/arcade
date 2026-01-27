@@ -1,9 +1,10 @@
-import type { MainGame } from "../scenes/MainGame";
+import { type MainGame } from "../scenes/MainGame";
 import type { Bullet } from "./Bullet";
 import { StateMachine } from "../stateMachine";
 import { Enemy } from "./Enemy";
-import { getPixelPosition, isWithinRange, type DataOverride } from "../utils";
-import { Math as PhaserMath, Physics } from "phaser";
+import { getCellFromPixel, getPixelPosition, isWithinRange, type DataOverride } from "../utils";
+import { Input, Math as PhaserMath, Physics } from "phaser";
+import PF from 'pathfinding'
 
 
 export type Units = 'int' | 'percentage' | 'bool'
@@ -121,55 +122,31 @@ export type PlayerData = { [Key in keyof typeof PLAYER_DATA['baseStats']]: typeo
 { [Key in keyof typeof PLAYER_DATA['attributes']]: typeof PLAYER_DATA['attributes'][Key]['exampleVal'] } &
 { [Key in keyof typeof PLAYER_DATA['currentState']]: typeof PLAYER_DATA['currentState'][Key]['exampleVal'] }
 
-// export type PlayerData = {
-//   statStrength: number
-//   statAgility: number
-//   statVitality: number
-//   statEnergy: number
-//
-//   attributeDamage: number
-//   attributeCriticalChance: number
-//
-//   attributeAttackSpeed: number
-//   attributeEvasion: number
-//
-//   attributeMaxMana: number
-//   attributeManaRegen: number
-//   attributeMagicDamage: number
-//
-//   attributeMaxHealth: number
-//   attributeHealthRegen: number
-//   attributeDefense: number
-//
-//   health: number;
-//   mana: number
-//   level: number
-//   exp: number
-//   expToNextLevel: number
-//   skillPoints: number
-// }
-
 export class Player extends Physics.Arcade.Sprite {
   declare scene: MainGame
   declare body: Physics.Arcade.Body;
   declare data: DataOverride<Player, PlayerData>
   attackTarget: null | Enemy = null
   stateMachine
-  path: number[][] = []
+  #path: number[][] = []
   #movementSpeed = 200
   #attackRange = 300
   #attackPrepareTimeInitial = 500
   #attackPrepareTimer = 500
   #attackBackswingTimeInitial = 500
   #attackBackswingTimer = 500
-  #recalculateAttackMoveTimeInitial = 200
-  #recalculateAttackMoveTimer = 0
   #lastHitTime = 0
   #regenDelay = 5000
   absorptionRange = 80
+  #currentAbsorbingCorpse: Enemy | null = null
+  #finder
+  #grid
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
+
+    this.#grid = new PF.Grid(this.scene.gameMap.gridWidth, this.scene.gameMap.gridHeight);
+    this.#finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: true });
 
     this.setDataEnabled()
     const maxMana = PhaserMath.Between(5, 10);
@@ -254,50 +231,66 @@ export class Player extends Physics.Arcade.Sprite {
         },
         move: {
           reenter: true,
-          onEnter: (path: typeof this.path) => {
-            this.path = path
-            this.attackTarget = null
+          onEnter: (target: Input.Pointer) => {
+            const path = this.#getPath(target.worldX, target.worldY)
+            if (path) {
+              this.#path = path
+              this.attackTarget = null
+            } else {
+              this.stateMachine.set('idle')
+            }
           },
           onUpdate: () => {
-            const nextPoint = getPixelPosition(this.path[0][0], this.path[0][1])
+            const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
             this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
             const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
             if (distance < 4) {
-              this.path.shift()
-              if (!this.path.length) {
+              this.#path.shift()
+              if (!this.#path.length) {
                 this.body.reset(nextPoint.x, nextPoint.y);
                 this.stateMachine.set('idle')
               }
             }
           },
           onExit: () => {
-            this.path = []
+            this.#path = []
             this.body.setVelocity(0)
           }
         },
         'attack-move': {
           reenter: true,
           onEnter: (target: Enemy) => {
-            this.attackTarget = target
+            const path = this.#getPath(target.x, target.y)
+            if (path) {
+              this.#path = path
+              this.attackTarget = target
+            } else {
+              this.stateMachine.set('idle')
+            }
           },
-          onUpdate: (dt) => {
+          onUpdate: () => {
             const canBeAttacked = this.attackTarget && this.attackTarget.active && !this.attackTarget.stateMachine.is('corpse')
             if (!canBeAttacked) {
               return
             }
-            if (this.#recalculateAttackMoveTimer > 0) {
-              this.#recalculateAttackMoveTimer -= dt
+            const withinRange = isWithinRange(this.x, this.y, this.attackTarget!.x, this.attackTarget!.y, this.#attackRange)
+            if (withinRange) {
+              this.stateMachine.set('attack-prepare')
             } else {
-              this.#recalculateAttackMoveTimer = this.#recalculateAttackMoveTimeInitial
-              const withinRange = isWithinRange(this.x, this.y, this.attackTarget!.x, this.attackTarget!.y, this.#attackRange)
-              if (withinRange) {
-                this.stateMachine.set('attack-prepare')
-              } else {
-                this.scene.physics.moveToObject(this, this.attackTarget!, this.#movementSpeed);
+              // MOVE LOGIC
+              const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
+              this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
+              const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
+              if (distance < 4) {
+                this.#path.shift()
+                if (!this.#path.length) {
+                  this.body.reset(nextPoint.x, nextPoint.y);
+                }
               }
             }
           },
           onExit: () => {
+            this.#path = []
             this.body.setVelocity(0)
           }
         },
@@ -343,6 +336,46 @@ export class Player extends Physics.Arcade.Sprite {
               }
             }
           }
+        },
+        'absorbe-move': {
+          reenter: true,
+          onEnter: (corpse: Enemy) => {
+            const path = this.#getPath(corpse.x, corpse.y)
+            if (path) {
+              this.#currentAbsorbingCorpse = corpse
+              this.#path = path
+            } else {
+              this.stateMachine.set('idle')
+            }
+          },
+          onUpdate: () => {
+            const canBeAbsorbed = this.#currentAbsorbingCorpse && this.#currentAbsorbingCorpse.active && this.#currentAbsorbingCorpse.stateMachine.is('corpse')
+            if (!canBeAbsorbed) {
+              return
+            }
+            const withinRange = isWithinRange(this.x, this.y, this.#currentAbsorbingCorpse!.x, this.#currentAbsorbingCorpse!.y, this.absorptionRange)
+            if (withinRange) {
+              this.stateMachine.set('absorbe')
+            } else {
+              const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
+              this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
+              const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
+              if (distance < 4) {
+                this.#path.shift()
+                if (!this.#path.length) {
+                  this.body.reset(nextPoint.x, nextPoint.y);
+                }
+              }
+            }
+          },
+          onExit: () => {
+            this.#path = []
+            this.body.setVelocity(0)
+            this.#currentAbsorbingCorpse = null
+          }
+        },
+        absorbe: {
+
         },
         cast: {
           // TODO: to be implemented
@@ -390,6 +423,10 @@ export class Player extends Physics.Arcade.Sprite {
     }
   }
 
+  get currentAbsorbingCorpse() {
+    return this.#currentAbsorbingCorpse
+  }
+
   takeDamage(amount: number) {
     const evasionRoll = Math.random();
     if (evasionRoll < this.data.get('attributeEvasion')) {
@@ -423,5 +460,18 @@ export class Player extends Physics.Arcade.Sprite {
       this.data.inc('exp', -this.data.get('expToNextLevel'))
       this.data.inc('expToNextLevel', Math.floor(this.data.get('expToNextLevel') * 1.5))
     }
+  }
+
+  #getPath(x: number, y: number) {
+    const playerCell = getCellFromPixel(this.x, this.y, this.scene.gameMap.gridCellSize)
+    const targetCell = getCellFromPixel(x, y, this.scene.gameMap.gridCellSize)
+    if (playerCell.cellX === targetCell.cellX && playerCell.cellY === targetCell.cellY) {
+      return null
+    }
+    const path = this.#finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, this.#grid.clone());
+    if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
+      path.shift();
+    }
+    return PF.Util.smoothenPath(this.#grid, path);
   }
 }
