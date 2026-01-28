@@ -26,7 +26,8 @@ export class MainGame extends Scene {
     worldHeight: number,
     gridCellSize: number,
     gridWidth: number,
-    gridHeight: number
+    gridHeight: number,
+    chunkSize: { width: number, height: number }
   }
 
   // initialized now
@@ -64,11 +65,18 @@ export class MainGame extends Scene {
     this.data.set('showBars', false)
     this.data.set('charStatsOpen', false)
 
-    this.gameMap.worldHeight = 3000
-    this.gameMap.worldWidth = 3000
-    this.gameMap.gridCellSize = 30
-    this.gameMap.gridHeight = this.gameMap.worldHeight / this.gameMap.gridCellSize
-    this.gameMap.gridWidth = this.gameMap.worldWidth / this.gameMap.gridCellSize
+    const texture = this.textures.get('bg-chunk-0-0').getSourceImage();
+    const chunkW = texture.width;
+    const chunkH = texture.height;
+    const COLUMNS = 3;
+    const ROWS = 3;
+
+    this.gameMap.worldWidth = chunkW * COLUMNS;
+    this.gameMap.worldHeight = chunkH * ROWS;
+    this.gameMap.gridCellSize = 30;
+    this.gameMap.gridHeight = this.gameMap.worldHeight / this.gameMap.gridCellSize;
+    this.gameMap.gridWidth = this.gameMap.worldWidth / this.gameMap.gridCellSize;
+    this.gameMap.chunkSize = { width: chunkW, height: chunkH }
 
     this.cameras.main.setBounds(0, 0, this.gameMap.worldWidth, this.gameMap.worldHeight);
     this.physics.world.setBounds(0, 0, this.gameMap.worldWidth, this.gameMap.worldHeight);
@@ -189,23 +197,21 @@ export class MainGame extends Scene {
 
   #updateChunks() {
     const cam = this.cameras.main;
-    const CHUNK_SIZE = 1000;
     const buffer = 500;
+    const chunkWidth = this.gameMap.chunkSize.width
+    const chunkHeight = this.gameMap.chunkSize.height
 
-    const left = Math.floor((cam.scrollX - buffer) / CHUNK_SIZE);
-    const right = Math.floor((cam.scrollX + cam.width + buffer) / CHUNK_SIZE);
-    const top = Math.floor((cam.scrollY - buffer) / CHUNK_SIZE);
-    const bottom = Math.floor((cam.scrollY + cam.height + buffer) / CHUNK_SIZE);
+    const left = Math.floor((cam.scrollX - buffer) / chunkWidth);
+    const right = Math.floor((cam.scrollX + cam.width + buffer) / chunkWidth);
+    const top = Math.floor((cam.scrollY - buffer) / chunkHeight);
+    const bottom = Math.floor((cam.scrollY + cam.height + buffer) / chunkHeight);
 
     for (let x = left; x <= right; x++) {
       for (let y = top; y <= bottom; y++) {
         const chunkKey = `bg-chunk-${x}-${y}`;
 
-        if (this.#isValidChunk(x, y) && !this.#visibleChunks[chunkKey]) {
-          const posX = x * CHUNK_SIZE;
-          const posY = y * CHUNK_SIZE;
-
-          const chunk = this.add.image(posX, posY, chunkKey).setOrigin(0);
+        if (this.textures.exists(chunkKey) && !this.#visibleChunks[chunkKey]) {
+          const chunk = this.add.image(x * chunkWidth, y * chunkHeight, chunkKey).setOrigin(0);
           chunk.setDepth(-1);
           this.#visibleChunks[chunkKey] = chunk;
         }
@@ -215,25 +221,14 @@ export class MainGame extends Scene {
     for (const key in this.#visibleChunks) {
       const chunk = this.#visibleChunks[key];
 
-      const chunkX = chunk.x / CHUNK_SIZE;
-      const chunkY = chunk.y / CHUNK_SIZE;
+      const chunkX = chunk.x / chunkWidth;
+      const chunkY = chunk.y / chunkHeight;
 
       if (chunkX < left || chunkX > right || chunkY < top || chunkY > bottom) {
         chunk.destroy();
         delete this.#visibleChunks[key];
       }
     }
-  }
-  #isValidChunk(x: number, y: number) {
-    const maxChunksX = 3;
-    const maxChunksY = 3;
-
-    return (
-      x >= 0 &&
-      x < maxChunksX &&
-      y >= 0 &&
-      y < maxChunksY
-    );
   }
 
   #spawnEnemy() {
