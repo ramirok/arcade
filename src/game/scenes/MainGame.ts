@@ -102,12 +102,6 @@ export class MainGame extends Scene {
         } else if (currentlyOver[0] instanceof Enemy) {
           if (currentlyOver[0].stateMachine.is('corpse')) {
             this.player.stateMachine.set('absorbe-move', currentlyOver[0])
-            // if (this.player.stateMachine.is('absorbing') &&
-            //   this.player.currentAbsorbingCorpse === currentlyOver[0]) {
-            //   this.player.stateMachine.set('idle')
-            // } else {
-            //   this.player.stateMachine.set('absorbing', currentlyOver[0])
-            // }
           } else {
             const isAttacking = this.player.stateMachine.getCurrent().startsWith('attack')
             if (!(isAttacking && this.player.attackTarget === currentlyOver[0])) {
