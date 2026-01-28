@@ -138,7 +138,7 @@ export class Player extends Physics.Arcade.Sprite {
   #lastHitTime = 0
   #regenDelay = 5000
   absorptionRange = 80
-  #currentAbsorbingCorpse: Enemy | null = null
+  #absorbeTarget: Enemy | null = null
   #finder
   #grid
 
@@ -241,15 +241,9 @@ export class Player extends Physics.Arcade.Sprite {
             }
           },
           onUpdate: () => {
-            const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
-            this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
-            const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
-            if (distance < 4) {
-              this.#path.shift()
-              if (!this.#path.length) {
-                this.body.reset(nextPoint.x, nextPoint.y);
-                this.stateMachine.set('idle')
-              }
+            const reached = this.#moveToTarget()
+            if (reached) {
+              this.stateMachine.set('idle')
             }
           },
           onExit: () => {
@@ -277,16 +271,7 @@ export class Player extends Physics.Arcade.Sprite {
             if (withinRange) {
               this.stateMachine.set('attack-prepare')
             } else {
-              // MOVE LOGIC
-              const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
-              this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
-              const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
-              if (distance < 4) {
-                this.#path.shift()
-                if (!this.#path.length) {
-                  this.body.reset(nextPoint.x, nextPoint.y);
-                }
-              }
+              this.#moveToTarget()
             }
           },
           onExit: () => {
@@ -342,36 +327,28 @@ export class Player extends Physics.Arcade.Sprite {
           onEnter: (corpse: Enemy) => {
             const path = this.#getPath(corpse.x, corpse.y)
             if (path) {
-              this.#currentAbsorbingCorpse = corpse
+              this.#absorbeTarget = corpse
               this.#path = path
             } else {
               this.stateMachine.set('idle')
             }
           },
           onUpdate: () => {
-            const canBeAbsorbed = this.#currentAbsorbingCorpse && this.#currentAbsorbingCorpse.active && this.#currentAbsorbingCorpse.stateMachine.is('corpse')
+            const canBeAbsorbed = this.#absorbeTarget && this.#absorbeTarget.active && this.#absorbeTarget.stateMachine.is('corpse')
             if (!canBeAbsorbed) {
               return
             }
-            const withinRange = isWithinRange(this.x, this.y, this.#currentAbsorbingCorpse!.x, this.#currentAbsorbingCorpse!.y, this.absorptionRange)
+            const withinRange = isWithinRange(this.x, this.y, this.#absorbeTarget!.x, this.#absorbeTarget!.y, this.absorptionRange)
             if (withinRange) {
               this.stateMachine.set('absorbe')
             } else {
-              const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
-              this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
-              const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
-              if (distance < 4) {
-                this.#path.shift()
-                if (!this.#path.length) {
-                  this.body.reset(nextPoint.x, nextPoint.y);
-                }
-              }
+              this.#moveToTarget()
             }
           },
           onExit: () => {
             this.#path = []
             this.body.setVelocity(0)
-            this.#currentAbsorbingCorpse = null
+            this.#absorbeTarget = null
           }
         },
         absorbe: {
@@ -400,11 +377,8 @@ export class Player extends Physics.Arcade.Sprite {
 
     if (this.stateMachine.is('dead')) return
 
-    // this.#updateAbsorption(dt)
-
     if (this.scene.time.now - this.#lastHitTime < this.#regenDelay) return
 
-    // Health Regeneration
     const health = this.data.get('health');
     const maxHealth = this.data.get('attributeMaxHealth');
     if (health < maxHealth) {
@@ -413,7 +387,6 @@ export class Player extends Physics.Arcade.Sprite {
       this.data.set('health', newHealth);
     }
 
-    // Mana Regeneration
     const mana = this.data.get('mana');
     const maxMana = this.data.get('attributeMaxMana');
     if (mana < maxMana) {
@@ -421,10 +394,6 @@ export class Player extends Physics.Arcade.Sprite {
       const newMana = Math.min(maxMana, mana + (regen * dt) / 1000);
       this.data.set('mana', newMana);
     }
-  }
-
-  get currentAbsorbingCorpse() {
-    return this.#currentAbsorbingCorpse
   }
 
   takeDamage(amount: number) {
@@ -473,5 +442,19 @@ export class Player extends Physics.Arcade.Sprite {
       path.shift();
     }
     return PF.Util.smoothenPath(this.#grid, path);
+  }
+
+  #moveToTarget() {
+    const nextPoint = getPixelPosition(this.#path[0][0], this.#path[0][1], this.scene.gameMap.gridCellSize)
+    this.scene.physics.moveTo(this, nextPoint.x, nextPoint.y, this.#movementSpeed)
+    const distance = PhaserMath.Distance.Between(nextPoint.x, nextPoint.y, this.x, this.y);
+    if (distance < 4) {
+      this.#path.shift()
+      if (!this.#path.length) {
+        this.body.reset(nextPoint.x, nextPoint.y);
+        return true
+      }
+    }
+    return false
   }
 }
