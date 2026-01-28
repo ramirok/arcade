@@ -56,10 +56,6 @@ export class MainGame extends Scene {
       frameWidth: 96,
       frameHeight: 96,
     });
-    this.load.spritesheet('player', 'assets/player.png', {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
   }
 
   create() {
