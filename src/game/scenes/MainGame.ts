@@ -134,7 +134,7 @@ export class MainGame extends Scene {
     });
 
     this.enemies = this.physics.add.group({
-      maxSize: 10,
+      maxSize: 2,
       collideWorldBounds: true,
     })
     this.#spawnEnemy()
@@ -262,6 +262,10 @@ export class MainGame extends Scene {
       isInsideSafeZone = safeZone.contains(x, y);
     }
     const enemy = this.enemies.getFirstDead(false, x, y, undefined, undefined, true);
+
+    if (this.enemies.maxSize === this.enemies.getLength()) {
+      return
+    }
 
     if (enemy) {
       enemy.enable()
