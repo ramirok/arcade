@@ -21,6 +21,7 @@ export interface EnemyConfig {
   recalculateAttackMoveTime: number;
   xpValue: number;
   maxMana: number;
+  absorptionTime: number
 }
 
 type EnemyData = {
@@ -72,6 +73,7 @@ export class Enemy extends Physics.Arcade.Sprite {
     this.#attackBackswingTimeInitial = config.attackBackswingTime;
     this.#recalculateAttackMoveTimeInitial = config.recalculateAttackMoveTime;
     this.#xpValue = config.xpValue;
+    this.#absorptionTimeInitial = config.absorptionTime
     // this.#maxMana = config.maxMana;
     // this.#mana = config.maxMana;
 
@@ -311,7 +313,8 @@ export class Slime extends Enemy {
       attackBackswingTime: 500,
       recalculateAttackMoveTime: 200,
       xpValue: 1,
-      maxMana: 5
+      maxMana: 5,
+      absorptionTime: 4500
     })
 
     scene.add.existing(this);
@@ -340,7 +343,8 @@ export class SlimeBigger extends Enemy {
       attackBackswingTime: 450,
       recalculateAttackMoveTime: 200,
       xpValue: 3,
-      maxMana: 7
+      maxMana: 7,
+      absorptionTime: 4500
     })
 
     scene.add.existing(this);
