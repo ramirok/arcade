@@ -6,7 +6,6 @@ import { getCellFromPixel, getPixelPosition, isWithinRange, type DataOverride } 
 import { Input, Math as PhaserMath, Physics } from "phaser";
 import PF from 'pathfinding'
 
-
 export type Units = 'int' | 'percentage' | 'bool'
 export const PLAYER_DATA = {
   baseStats: {
@@ -140,12 +139,10 @@ export class Player extends Physics.Arcade.Sprite {
   absorptionRange = 80
   #absorbeTarget: Enemy | null = null
   #finder
-  #grid
 
   constructor(scene: MainGame, x: number, y: number) {
     super(scene, x, y, 'slime');
 
-    this.#grid = new PF.Grid(this.scene.gameMap.gridWidth, this.scene.gameMap.gridHeight);
     this.#finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: true });
 
     this.setDataEnabled()
@@ -437,11 +434,14 @@ export class Player extends Physics.Arcade.Sprite {
     if (playerCell.cellX === targetCell.cellX && playerCell.cellY === targetCell.cellY) {
       return null
     }
-    const path = this.#finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, this.#grid.clone());
+    const path = this.#finder.findPath(playerCell.cellX, playerCell.cellY, targetCell.cellX, targetCell.cellY, this.scene.grid.clone());
     if (path.length > 0 && path[0][0] === playerCell.cellX && path[0][1] === playerCell.cellY) {
       path.shift();
     }
-    return PF.Util.smoothenPath(this.#grid, path);
+    if (!path.length) {
+      return null
+    }
+    return PF.Util.compressPath(path);
   }
 
   #moveToTarget() {

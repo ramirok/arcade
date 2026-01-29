@@ -3,13 +3,28 @@ import { Castle } from "../components/Castle";
 import { Enemy, Slime } from "../components/Enemy";
 import { Player } from "../components/Player";
 import { Bullet } from "../components/Bullet";
-import { type DataOverride } from "../utils";
+import { getCellFromPixel, type DataOverride } from "../utils";
 import { GameObjects, Geom, Input, Math as PhaserMath, Physics, Scene } from "phaser";
+import PF from 'pathfinding'
 
 type SceneData = {
   showBars: boolean
   charStatsOpen: boolean
 }
+
+interface MapObject {
+  key: string;
+  x: number;
+  y: number;
+  scale?: number;
+}
+
+const OBJECT_MAP: Record<string, MapObject[]> = {
+  "0-0": [
+    { key: 'castle', x: 1000, y: 1500 },
+    // { key: 'castle', x: 500, y: 150 }
+  ]
+};
 
 export class MainGame extends Scene {
   declare data: DataOverride<MainGame, SceneData>
@@ -19,8 +34,12 @@ export class MainGame extends Scene {
   castle!: Castle
   bullets!: Physics.Arcade.Group;
   enemies!: Physics.Arcade.Group;
+  #mapCollisionGroup!: Physics.Arcade.StaticGroup;
   #camLastX!: number
   #camLastY!: number
+  grid!: PF.Grid
+
+  // initialized now
   gameMap = {} as {
     worldWidth: number,
     worldHeight: number,
@@ -29,8 +48,7 @@ export class MainGame extends Scene {
     gridHeight: number,
     chunkSize: { width: number, height: number }
   }
-
-  // initialized now
+  #objectChunks: Record<string, GameObjects.Sprite[]> = {};
   #visibleChunks: Record<string, GameObjects.Image> = {}
   constructor() {
     super('main-game');
@@ -73,14 +91,16 @@ export class MainGame extends Scene {
 
     this.gameMap.worldWidth = chunkW * COLUMNS;
     this.gameMap.worldHeight = chunkH * ROWS;
-    this.gameMap.gridCellSize = 30;
+    this.gameMap.gridCellSize = 100;
     this.gameMap.gridHeight = this.gameMap.worldHeight / this.gameMap.gridCellSize;
     this.gameMap.gridWidth = this.gameMap.worldWidth / this.gameMap.gridCellSize;
     this.gameMap.chunkSize = { width: chunkW, height: chunkH }
 
     this.cameras.main.setBounds(0, 0, this.gameMap.worldWidth, this.gameMap.worldHeight);
     this.physics.world.setBounds(0, 0, this.gameMap.worldWidth, this.gameMap.worldHeight);
+    this.grid = new PF.Grid(this.gameMap.gridWidth, this.gameMap.gridHeight);
 
+    this.#mapCollisionGroup = this.physics.add.staticGroup();
 
     this.input.keyboard!.on('keydown-ESC', () => {
       this.scene.pause()
@@ -98,6 +118,29 @@ export class MainGame extends Scene {
     this.#camLastX = this.cameras.main.scrollX
     this.#camLastY = this.cameras.main.scrollY
     this.#updateChunks()
+    for (const obj of this.#mapCollisionGroup.getChildren()) {
+      const obstacle = obj as Physics.Arcade.Sprite
+      const bounds = obstacle.getBounds();
+
+      for (let x = bounds.x; x <= bounds.x + bounds.width; x += 1) {
+        for (let y = bounds.y; y <= bounds.y + bounds.height; y += 1) {
+          const blockedCell = getCellFromPixel(x, y, this.gameMap.gridCellSize)
+          this.grid.setWalkableAt(blockedCell.cellX, blockedCell.cellY, false)
+        }
+      }
+    }
+
+    const clonedGrid = this.grid.clone()
+    for (let x = 0; x < this.gameMap.gridWidth; x += 1) {
+      for (let y = 0; y < this.gameMap.gridHeight; y += 1) {
+        const node = clonedGrid.getNodeAt(x, y);
+        const rectangle = this.add.rectangle(x * this.gameMap.gridCellSize, y * this.gameMap.gridCellSize, this.gameMap.gridCellSize, this.gameMap.gridCellSize, node.walkable ? 0xffffff : 0xff0000, .5)
+        rectangle.setOrigin(0)
+        rectangle.setStrokeStyle(1, 0x000000, .5)
+
+      }
+
+    }
 
     this.input.on('pointerdown', (pointerEvent: Input.Pointer, currentlyOver: GameObjects.GameObject[]) => {
       if (pointerEvent.button === 2) {
@@ -132,13 +175,15 @@ export class MainGame extends Scene {
     });
 
     this.enemies = this.physics.add.group({
-      maxSize: 2,
+      maxSize: 0,
       collideWorldBounds: true,
     })
     this.#spawnEnemy()
 
     this.physics.add.collider(this.castle, this.enemies)
     this.physics.add.collider(this.castle, this.player)
+    this.physics.add.collider(this.player, this.#mapCollisionGroup)
+    this.physics.add.collider(this.enemies, this.#mapCollisionGroup)
 
     this.physics.add.overlap(this.enemies, this.enemies, (objA, objB) => {
       const enemyA = objA as Enemy
@@ -214,6 +259,8 @@ export class MainGame extends Scene {
           const chunk = this.add.image(x * chunkWidth, y * chunkHeight, chunkKey).setOrigin(0);
           chunk.setDepth(-1);
           this.#visibleChunks[chunkKey] = chunk;
+
+          this.#spawnChunkObjects(x, y, chunkKey);
         }
       }
     }
@@ -229,6 +276,29 @@ export class MainGame extends Scene {
         delete this.#visibleChunks[key];
       }
     }
+  }
+
+  #spawnChunkObjects(x: number, y: number, chunkKey: string) {
+    const chunkData = OBJECT_MAP[`${x}-${y}`];
+    if (!chunkData) return;
+
+    const { width, height } = this.gameMap.chunkSize;
+    const spawnedInThisChunk: GameObjects.Sprite[] = [];
+
+    chunkData.forEach(obj => {
+      const worldX = (x * width) + obj.x;
+      const worldY = (y * height) + obj.y;
+
+      const sprite = this.#mapCollisionGroup.create(worldX, worldY, obj.key);
+      sprite.setOrigin(0.5);
+
+      sprite.body.setSize(sprite.width * 0.8, sprite.height * 0.8);
+      sprite.body.updateFromGameObject();
+
+      spawnedInThisChunk.push(sprite);
+    });
+
+    this.#objectChunks[chunkKey] = spawnedInThisChunk;
   }
 
   #spawnEnemy() {
